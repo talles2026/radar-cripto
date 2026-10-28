@@ -117,6 +117,41 @@ table.mtf{width:100%;border-collapse:collapse;font-size:.82rem}
 .prefs label{display:flex;gap:8px;align-items:center;font-size:.84rem}
 .prefs input{width:18px;height:18px;accent-color:var(--accent)}
 
+
+/* probabilidades */
+.hz{border-top:1px solid var(--line);padding:12px 0 4px}
+.hz:first-of-type{border-top:0;padding-top:0}
+.hz h3{margin:0 0 8px;font-size:.92rem}
+.chance{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.chance .pct{font-family:var(--display);font-weight:700;font-size:2rem;line-height:1}
+.barra2{position:relative;height:10px;border-radius:6px;background:color-mix(in srgb,var(--down) 45%,var(--soft));margin:8px 0 4px;overflow:hidden}
+.barra2 i{position:absolute;left:0;top:0;bottom:0;background:var(--up);border-radius:6px 0 0 6px}
+.barra2 b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.linhas{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:.86rem}
+.faixas{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.faixas div{background:var(--soft);border-radius:10px;padding:8px;font-size:.8rem}
+.faixas b{display:block;font-family:var(--mono);font-size:.84rem}
+.selo2{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 12px;margin:12px 0 4px;font-size:.86rem}
+.selo2.bom{background:color-mix(in srgb,var(--up) 13%,transparent)}
+.selo2.medio{background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.selo2.fraco{background:color-mix(in srgb,var(--down) 12%,transparent)}
+.selo2 .ic{font-size:1.2rem;line-height:1}
+.placar td.v{font-family:var(--mono)}
+details.mais summary{cursor:pointer;color:var(--muted);font-size:.84rem;margin-top:10px}
+/* calculadora */
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.calc label{font-size:.74rem;color:var(--muted);display:grid;gap:3px}
+.calc input{font:inherit;font-size:16px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--ink);min-width:0;font-family:var(--mono)}
+.resultado{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.resultado div{background:var(--soft);border-radius:10px;padding:8px}
+.resultado span{display:block;font-size:.7rem;color:var(--muted)}
+.resultado b{font-family:var(--mono);font-size:.92rem}
+.nota{font-size:.82rem;margin:10px 0 0;padding:8px 10px;border-radius:10px}
+.nota.ok{background:color-mix(in srgb,var(--up) 12%,transparent)}
+.nota.ruim{background:color-mix(in srgb,var(--down) 12%,transparent)}
+/* comentário */
+#cardComent p{margin:0 0 6px;font-size:.92rem}
+#cardComent ul{margin:6px 0;padding-left:18px;font-size:.88rem}
 dialog{border:0;padding:0;width:100%;max-width:720px;margin:0 auto;background:var(--bg);color:var(--ink);border-radius:0 0 18px 18px;position:fixed;top:0;max-height:90vh;overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.55)}
 .busca{padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 16px}
@@ -143,6 +178,8 @@ footer a{color:inherit}
 
   <section class="card" id="cardPreco"><div class="skel"></div></section>
 
+  <section class="card" id="cardComent" hidden></section>
+
   <section class="card">
     <div class="tfs" id="tfs"></div>
     <div class="chips" id="chips"></div>
@@ -153,6 +190,10 @@ footer a{color:inherit}
   </section>
 
   <section class="card" id="cardAnalise"><h2>Leitura do gráfico</h2><div class="skel"></div></section>
+
+  <section class="card" id="cardProb"><h2>O que o histórico diz</h2><div class="skel"></div></section>
+
+  <section class="card" id="cardRisco"><h2>Calculadora de risco</h2><div id="riscoCorpo"></div></section>
 
   <section class="card" id="cardAlertas"><h2>Alertas no celular</h2><div id="alertasCorpo"></div></section>
 </main>
@@ -174,7 +215,7 @@ footer a{color:inherit}
 <script type="module">
 import { analisar, series } from "./analise.js";
 
-const APP_VERSAO = "1";
+const APP_VERSAO = "2";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -365,7 +406,7 @@ async function analisarTudo(){
   await Promise.all(TFS.map(async ([k]) => {
     try { const c = velas[`${par}|${k}`] && k !== tf ? velas[`${par}|${k}`] : await carregarVelas(par, k); analises[k] = analisar(c); } catch (e) { analises[k] = null; }
   }));
-  renderAnalise(); desenhar(false);
+  renderAnalise(); desenhar(false); renderRisco();
 }
 let fg = null;
 async function medoGanancia(){
@@ -409,6 +450,138 @@ function resumoGeral(){
   else if (c >= 1.5 && l >= 1.5) txt += " Os prazos concordam para cima.";
   else if (c <= -1.5 && l <= -1.5) txt += " Os prazos concordam para baixo.";
   return `<p class="small" style="margin:10px 0 0"><b>Resumo:</b> ${txt}</p>`;
+}
+
+
+// ---------- o que o histórico diz (probabilidades)
+const TF_EST = { "15m":"1h", "1h":"1h", "4h":"4h", "1d":"1d", "1w":"1d" };
+const NOME_EST = { "1h":"1 hora", "4h":"4 horas", "1d":"diário" };
+const estCache = {};
+const pc = v => v == null ? "–" : Math.round(v * 100) + "%";
+const pr = v => v == null ? "–" : (v > 0 ? "+" : "") + (v * 100).toFixed(1).replace(".", ",") + "%";
+async function carregarEstat(){
+  const t = TF_EST[tf], k = par + "|" + t;
+  const el = $("cardProb");
+  if (estCache[k] && Date.now() - estCache[k].em < 10 * 60000) return renderEstat(estCache[k].d, t);
+  el.innerHTML = `<h2>O que o histórico diz</h2><p class="small muted">Calculando com anos de candles de ${base(par)}… na primeira vez pode levar até 30 segundos.</p><div class="skel" style="height:80px"></div>`;
+  try {
+    const r = await fetch(`${CONFIG.fn}?acao=estat&par=${par}&tf=${t}`, { signal: AbortSignal.timeout(90000) });
+    const d = await r.json();
+    if (d.erro) throw new Error(d.erro);
+    estCache[k] = { em: Date.now(), d };
+    if (TF_EST[tf] === t && d.par === par) renderEstat(d, t);
+  } catch (e) { el.innerHTML = `<h2>O que o histórico diz</h2><p class="small muted">Não foi possível calcular agora (${esc(e.message)}). Moedas muito novas não têm histórico suficiente.</p>`; }
+}
+function renderEstat(d, t){
+  const el = $("cardProb");
+  const ehUsd = /USDT$|FDUSD$|USDC$/.test(par);
+  const brl = v => ehUsd && usdBrl ? ` <span class="muted">(${fBRL(v * usdBrl)})</span>` : "";
+  const T = d.teste;
+  let selo = "";
+  if (T) {
+    const aA = T.alta.acerto, aB = T.baixa.acerto;
+    const vantA = aA != null && T.alta.casos >= 8 ? aA - T.taxaBase : null, vantB = aB != null && T.baixa.casos >= 8 ? aB - (1 - T.taxaBase) : null;
+    const melhor = Math.max(vantA ?? -1, vantB ?? -1);
+    const nivel = T.habilidade > 0.03 && melhor > 0.07 ? "bom" : T.habilidade > 0 && melhor > 0.02 ? "medio" : "fraco";
+    const txt = { bom: "Neste gráfico, o método acertou mais que o acaso no teste com o passado.", medio: "Neste gráfico, o método teve vantagem pequena sobre o acaso no teste com o passado.", fraco: "Neste gráfico, o método não mostrou vantagem sobre o acaso no teste com o passado. Use só como referência." }[nivel];
+    const det = [];
+    if (T.alta.casos) det.push(`quando apontou 60% ou mais de alta, subiu em <b>${pc(aA)}</b> das ${T.alta.casos} vezes`);
+    if (T.baixa.casos) det.push(`quando apontou 60% ou mais de queda, caiu em <b>${pc(aB)}</b> das ${T.baixa.casos} vezes`);
+    selo = `<div class="selo2 ${nivel}"><span class="ic">${nivel === "bom" ? "✅" : nivel === "medio" ? "⚖️" : "⚠️"}</span><div><b>${txt}</b><br><span class="small">${det.join("; ")}. Normal no período: subiu em ${pc(T.taxaBase)} das vezes (${T.testes} testes em ${T.horizonte}).</span></div></div>`;
+  }
+  const hz = d.horizontes.map(h => {
+    const P = h.parecidos, B = h.base;
+    if (!P) return "";
+    const dif = P.sobe - B.sobe;
+    const frase = Math.abs(dif) < 0.05 ? "praticamente igual ao normal" : dif > 0 ? `${Math.round(dif * 100)} pontos acima do normal` : `${Math.round(-dif * 100)} pontos abaixo do normal`;
+    return `<div class="hz"><h3>Daqui a ${h.nome}</h3>
+      <div class="chance"><span class="pct ${P.sobe >= 0.55 ? "up" : P.sobe <= 0.45 ? "down" : ""}">${pc(P.sobe)}</span><span class="small">das ${P.casos} situações parecidas terminaram <b>mais alto</b>; ${frase} (${pc(B.sobe)}).</span></div>
+      <div class="barra2" title="chance de estar mais alto"><i style="width:${P.sobe * 100}%"></i><b style="left:${B.sobe * 100}%"></b></div>
+      <ul class="linhas">
+        <li>Na metade dos casos o resultado ficou em até <b class="num">${pr(P.mediana)}</b>.</li>
+        <li>8 em cada 10 ficaram entre <b class="num">${pr(P.p10)}</b> e <b class="num">${pr(P.p90)}</b>.</li>
+        <li>No caminho, a queda típica foi de <b class="num down">${pr(P.quedaTipica)}</b>; nos piores casos, <b class="num down">${pr(P.quedaRuim)}</b>.</li>
+      </ul>
+      <div class="faixas"><div><span class="muted">7 em 10 vezes, entre</span><b>${fP(h.faixa.p70[0])} e ${fP(h.faixa.p70[1])}</b></div><div><span class="muted">9 em 10 vezes, entre</span><b>${fP(h.faixa.p90[0])} e ${fP(h.faixa.p90[1])}</b></div></div>
+      <details class="mais"><summary>Ver datas parecidas no passado</summary><ul class="linhas">${h.exemplos.map(x => `<li>${new Date(x.t).toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year:"numeric" })}${t !== "1d" ? " " + new Date(x.t).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" }) : ""}: depois de ${h.nome}, <b class="num ${x.ret >= 0 ? "up" : "down"}">${pr(x.ret)}</b></li>`).join("")}</ul></details>
+    </div>`;
+  }).join("");
+  const pl = d.placar;
+  const placarHtml = pl?.sinais?.length ? `<details class="mais"><summary>Placar dos sinais no histórico (${pl.horizonte} depois)</summary>
+    <table class="mtf placar"><thead><tr><th>Sinal</th><th>Vezes</th><th>Acertou</th><th>Normal</th></tr></thead><tbody>
+    ${pl.sinais.map(x => `<tr><td style="text-align:left">${esc(x.sinal)} <span class="muted small">(espera ${x.espera})</span></td><td class="v">${x.casos}</td><td class="v ${x.vantagem > 0.05 ? "up" : x.vantagem < -0.05 ? "down" : ""}">${pc(x.acerto)}</td><td class="v muted">${pc(x.baseDir)}</td></tr>`).join("")}
+    </tbody></table><p class="small muted">"Acertou" é quantas vezes o preço foi na direção esperada pelo sinal. Compare com "Normal": se for parecido, o sinal sozinho não ajuda.</p></details>` : "";
+  // destaques em linguagem simples: sinais que funcionaram ou enganaram de forma clara
+  const dest = (pl?.sinais || []).filter(x => x.casos >= 20 && Math.abs(x.vantagem) >= 0.08).slice(0, 3).map(x => x.vantagem > 0
+    ? `<li>✅ <b>${esc(x.sinal)}</b> funcionou: o preço foi na direção esperada (${x.espera}) em ${pc(x.acerto)} das ${x.casos} vezes; o normal é ${pc(x.baseDir)}.</li>`
+    : `<li>⚠️ <b>${esc(x.sinal)}</b> costuma enganar: em ${pc(1 - x.acerto)} das ${x.casos} vezes o preço foi para o lado contrário ao esperado.</li>`);
+  const destHtml = dest.length ? `<p class="eyebrow" style="margin:12px 0 4px">Lições do histórico (${pl.horizonte} depois)</p><ul class="linhas">${dest.join("")}</ul>` : "";
+  el.innerHTML = `<h2>O que o histórico diz · ${base(par)} ${NOME_EST[t]}</h2>
+    <p class="small muted" style="margin:-4px 0 10px">Procuramos nos ${d.velas.toLocaleString("pt-BR")} candles desde ${new Date(d.desde).toLocaleDateString("pt-BR", { month:"short", year:"numeric" })} os momentos mais parecidos com o de agora (tendência, IFR, MACD, volatilidade) e medimos o que veio depois.${tf === "15m" || tf === "1w" ? ` Para o gráfico de ${tf === "15m" ? "15 min" : "semana"}, usamos o de ${NOME_EST[t]}.` : ""}</p>
+    ${hz}${selo}${destHtml}${placarHtml}
+    <p class="aviso-leg">Estatística do passado não garante o futuro. Notícias e eventos grandes mudam tudo.</p>`;
+}
+
+// ---------- calculadora de risco
+let calc = store.get("calc", { capital: "", risco: 1 });
+function renderRisco(){
+  const el = $("riscoCorpo"); const t = tickers[par]; const a = analises[TF_EST[tf] === "1h" ? "1h" : tf] || analises[tf];
+  if (!t) { el.innerHTML = ""; return; }
+  const ehUsd = /USDT$|FDUSD$|USDC$/.test(par);
+  const atrV = a?.atr || t.p * 0.02;
+  const sup = a?.suportes?.[0]?.p, res = a?.resistencias?.[0]?.p;
+  const stopSug = sup && (t.p - sup) < atrV * 3 && sup < t.p ? sup - atrV * 0.25 : t.p - atrV * 1.5;
+  const alvoSug = res && res > t.p ? res : t.p + (t.p - stopSug) * 2;
+  el.innerHTML = `<p class="small muted" style="margin:-4px 0 10px">Diz quanto comprar para que, se der errado e bater no stop, você perca só o que escolheu. Sugestões de stop e alvo vêm dos suportes, resistências e da volatilidade do gráfico de ${TFS.find(x => x[0] === tf)[1].toLowerCase()}.</p>
+    <div class="calc">
+      <label>Capital total (R$)<input id="cCap" inputmode="decimal" value="${calc.capital}" placeholder="ex.: 5000"></label>
+      <label>Arriscar por operação (%)<input id="cRisco" inputmode="decimal" value="${calc.risco}"></label>
+      <label>Entrada (${ehUsd ? "USDT" : "R$"})<input id="cEnt" inputmode="decimal" value="${+t.p.toPrecision(6)}"></label>
+      <label>Stop (${ehUsd ? "USDT" : "R$"})<input id="cStop" inputmode="decimal" value="${+stopSug.toPrecision(6)}"></label>
+      <label>Alvo (${ehUsd ? "USDT" : "R$"})<input id="cAlvo" inputmode="decimal" value="${+alvoSug.toPrecision(6)}"></label>
+      <label>&nbsp;<button class="btn sec" id="cSug" type="button">Usar sugestões</button></label>
+    </div><div id="cRes"></div>`;
+  const num = id => { const v = String($(id).value).trim(); return parseFloat(v.includes(",") ? v.replace(/\./g, "").replace(",", ".") : v); };
+  const conta = () => {
+    const cap = num("cCap"), risco = num("cRisco"), ent = num("cEnt"), stop = num("cStop"), alvo = num("cAlvo");
+    calc = { capital: $("cCap").value, risco: $("cRisco").value }; store.set("calc", calc);
+    if (!(cap > 0) || !(risco > 0) || !(ent > 0) || !(stop > 0)) { $("cRes").innerHTML = `<p class="small muted" style="margin:10px 0 0">Preencha o capital para ver o tamanho da posição.</p>`; return; }
+    if (stop >= ent) { $("cRes").innerHTML = `<p class="nota ruim">O stop precisa ficar abaixo da entrada (compra).</p>`; return; }
+    const fx = ehUsd ? (usdBrl || 5) : 1;          // converte preço da moeda para reais
+    const perdaR = cap * risco / 100;               // quanto aceita perder em R$
+    const distPct = (ent - stop) / ent;
+    let posR = perdaR / distPct, limitada = false;
+    if (posR > cap) { posR = cap; limitada = true; }
+    const qtd = posR / (ent * fx);
+    const perdaReal = qtd * (ent - stop) * fx, ganho = alvo > ent ? qtd * (alvo - ent) * fx : 0;
+    const rr = ganho / perdaReal;
+    const pertoDemais = (ent - stop) < atrV * 0.8;
+    $("cRes").innerHTML = `<div class="resultado">
+      <div><span>Comprar</span><b>${qtd.toLocaleString("pt-BR", { maximumSignificantDigits: 6 })} ${base(par)}</b></div>
+      <div><span>Valor da compra</span><b>${fBRL(posR)}</b>${ehUsd ? `<span>${fP(posR / fx, 2)} USDT</span>` : ""}</div>
+      <div><span>Se bater o stop (${pr(-distPct)})</span><b class="down">−${fBRL(perdaReal)}</b></div>
+      <div><span>Se bater o alvo (${pr(alvo / ent - 1)})</span><b class="up">+${fBRL(ganho)}</b></div>
+      <div><span>Ganho ÷ risco</span><b>${isFinite(rr) ? rr.toFixed(1).replace(".", ",") + " para 1" : "–"}</b></div>
+      <div><span>Parte do capital</span><b>${pc(posR / cap)}</b></div></div>
+      ${limitada ? `<p class="nota ruim">Com esse stop tão perto, a conta pedia mais que o seu capital; limitamos ao capital todo. Prefira um stop mais distante ou arriscar menos.</p>` : ""}
+      ${pertoDemais ? `<p class="nota ruim">O stop está mais perto que a oscilação normal de um candle (${fP(atrV)}). Ele pode ser atingido só pelo "barulho" do mercado.</p>` : ""}
+      <p class="nota ${rr >= 2 ? "ok" : rr < 1.5 ? "ruim" : ""}">${rr >= 2 ? "Boa relação: o ganho possível é pelo menos o dobro do risco." : rr < 1.5 ? "O ganho possível é pequeno perto do risco. Muitos traders só entram com 2 para 1 ou mais." : "Relação razoável entre ganho e risco."}</p>`;
+  };
+  ["cCap","cRisco","cEnt","cStop","cAlvo"].forEach(id => $(id).oninput = conta);
+  $("cSug").onclick = () => { $("cEnt").value = +t.p.toPrecision(6); $("cStop").value = +stopSug.toPrecision(6); $("cAlvo").value = +alvoSug.toPrecision(6); conta(); };
+  conta();
+}
+
+// ---------- comentário do dia (escrito por uma tarefa agendada)
+async function carregarComentario(){
+  try {
+    const c = await (await fetch("comentario.json?t=" + Date.now(), { cache:"no-store" })).json();
+    if (!c?.texto || Date.now() - Date.parse(c.data) > 40 * 3600e3) return;
+    const el = $("cardComent"); el.hidden = false;
+    el.innerHTML = `<h2>${esc(c.titulo || "Comentário do dia")}</h2><p class="small muted" style="margin:-4px 0 8px">${new Date(c.data).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })}</p>
+      <p>${esc(c.texto)}</p>${c.pontos?.length ? `<ul>${c.pontos.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
+      ${c.fontes?.length ? `<p class="small muted">Fontes: ${c.fontes.map(f => `<a href="${esc(f.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(f.nome)}</a>`).join(" · ")}</p>` : ""}`;
+  } catch (e) {}
 }
 
 // ---------- tempo real (WebSocket)
@@ -479,7 +652,7 @@ $("fecharBusca").onclick = () => $("dlgBusca").close();
 async function abrirTf(){
   try { await carregarVelas(par, tf); } catch (e) { toast(e.message); return; }
   analises[tf] = analisar(velas[`${par}|${tf}`]);
-  desenhar(true); renderAnalise(); conectar();
+  desenhar(true); renderAnalise(); conectar(); carregarEstat(); renderRisco();
 }
 async function escolher(s){
   par = s; store.set("par", par);
@@ -495,6 +668,7 @@ async function iniciar(){
   renderTfs(); criarGraficos();
   const u = new URLSearchParams(location.search).get("par");
   if (u && /^[A-Z0-9]{5,20}$/.test(u)) { if (!lista.includes(u)) { lista.push(u); store.set("lista", lista); } par = u; }
+  carregarComentario();
   await Promise.all([escolher(par), medoGanancia()]);
   renderAnalise();
   setInterval(() => carregarTickers().then(() => { renderLista(); renderPreco(); }).catch(() => {}), 60000);

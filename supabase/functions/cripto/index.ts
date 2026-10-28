@@ -4,10 +4,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import webpush from "npm:web-push@3.6.7";
 import { analisar } from "./analise.js";
+import { calcular } from "./probabilidades.js";
 
 const SITE = "https://talles2026.github.io/radar-cripto/";
 const APIS = ["https://api.binance.com", "https://data-api.binance.vision", "https://api1.binance.com", "https://api2.binance.com"];
-const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-cron", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-cron", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 type J = Record<string, any>;
 const resp = (d: unknown, status = 200) => new Response(JSON.stringify(d), { status, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -43,6 +44,56 @@ async function enviar(s: J, payload: J) {
     if (e?.statusCode === 404 || e?.statusCode === 410) await db.from("cripto_inscricoes").delete().eq("endpoint", s.endpoint);
     return false;
   }
+}
+
+
+// ---------------------------------------------------------------- histórico e probabilidades
+const LIMITE: J = { "1h": 20000, "4h": 13000, "1d": 4000 };
+const VALIDADE_MIN: J = { "1h": 60, "4h": 180, "1d": 720 };
+const MS: J = { "1h": 36e5, "4h": 144e5, "1d": 864e5 };
+const paraLinha = (k: any[]) => [k[0], +k[1], +k[2], +k[3], +k[4], +k[5]];
+
+async function historico(par: string, tf: string) {
+  const { data: h } = await db.from("cripto_hist").select("dados,ultimo").eq("par", par).eq("tf", tf).maybeSingle();
+  let v: any[] = h?.dados ?? [];
+  const agora = Date.now();
+  const fechado = (k: any[]) => k[0] + MS[tf] <= agora;
+  if (!v.length) {
+    // primeira vez: busca para trás, de 1000 em 1000
+    let fim = agora;
+    while (v.length < LIMITE[tf]) {
+      const k = await binance(`/api/v3/klines?symbol=${par}&interval=${tf}&limit=1000&endTime=${fim}`);
+      if (!k?.length) break;
+      v = k.filter(fechado).map(paraLinha).concat(v);
+      if (k.length < 1000) break;
+      fim = k[0][0] - 1;
+    }
+  } else {
+    // atualização: só o que falta
+    let ini = v[v.length - 1][0] + 1;
+    for (let voltas = 0; voltas < 30; voltas++) {
+      const k = await binance(`/api/v3/klines?symbol=${par}&interval=${tf}&limit=1000&startTime=${ini}`);
+      const novos = (k ?? []).filter(fechado).map(paraLinha);
+      if (!novos.length) break;
+      v = v.concat(novos); ini = novos[novos.length - 1][0] + 1;
+      if ((k ?? []).length < 1000) break;
+    }
+  }
+  // sem duplicados, em ordem, no limite
+  const vistos = new Set<number>();
+  v = v.filter(x => !vistos.has(x[0]) && (vistos.add(x[0]), true)).sort((a, b) => a[0] - b[0]).slice(-LIMITE[tf]);
+  if (v.length) await db.from("cripto_hist").upsert({ par, tf, dados: v, ultimo: v[v.length - 1][0], atualizado: new Date().toISOString() });
+  return v;
+}
+
+async function estatisticas(par: string, tf: string, forcar = false) {
+  const { data: c } = await db.from("cripto_estat").select("dados,criado").eq("par", par).eq("tf", tf).maybeSingle();
+  if (c && !forcar && Date.now() - Date.parse(c.criado) < VALIDADE_MIN[tf] * 60e3) return { ...c.dados, cache: true };
+  const v = await historico(par, tf);
+  const r: J = calcular(v, tf);
+  r.atualizado = new Date().toISOString(); r.par = par;
+  if (!r.erro) await db.from("cripto_estat").upsert({ par, tf, dados: r, criado: r.atualizado });
+  return r;
 }
 
 async function rodar() {
@@ -127,6 +178,15 @@ async function rodar() {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  const u = new URL(req.url);
+  if (req.method === "GET" && u.searchParams.get("acao") === "estat") {
+    const par = String(u.searchParams.get("par") || "").toUpperCase(), tf = String(u.searchParams.get("tf") || "");
+    if (!/^[A-Z0-9]{5,20}$/.test(par) || !LIMITE[tf]) return resp({ erro: "parâmetros inválidos" }, 400);
+    try {
+      const r = await estatisticas(par, tf);
+      return new Response(JSON.stringify(r), { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=600" } });
+    } catch (e: any) { return resp({ erro: String(e?.message ?? e) }, 502); }
+  }
   const corpo = await req.json().catch(() => ({}));
   try {
     if (corpo.acao === "teste") {
