@@ -263,8 +263,8 @@ footer a{color:inherit}
 
   <section class="card" id="cardAlertas"><h2>Alertas no celular</h2><div id="alertasCorpo"></div></section>
 
-  <section class="card" id="cardApp"><h2>Levar no celular</h2>
-    <div class="btns"><button class="btn" type="button" id="btnInstall" hidden>Instalar app</button><button class="btn sec" type="button" id="btnShare">Compartilhar link</button></div>
+  <section class="card" id="cardApp"><h2>Instalar no celular</h2>
+    <div class="btns"><button class="btn" type="button" id="btnInstall" hidden>Instalar app</button></div>
     <p class="small muted" id="installHint" style="margin:10px 0 0">No iPhone: toque em Compartilhar no Safari e depois em "Adicionar à Tela de Início". No Android: menu do Chrome, "Instalar app" ou "Adicionar à tela inicial".</p>
   </section>
 </main>
@@ -287,7 +287,7 @@ footer a{color:inherit}
 import { analisar, series } from "./analise.js";
 import { situacao } from "./setups.js";
 
-const APP_VERSAO = "8";
+const APP_VERSAO = "9";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -980,21 +980,15 @@ async function renderAlertas(){
   $("aDesligar").onclick = async () => { await rpc("cripto_remover", { p_endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe(); toast("Alertas desligados."); renderAlertas(); };
 }
 
-// ---------- instalar e compartilhar (igual ao Radar do Café e do Clima)
+// ---------- instalar (igual ao Radar do Café e do Clima)
 {
   let deferred = null;
   const instalado = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-  const marcarInstalado = () => { $("btnInstall").hidden = true; $("installHint").textContent = "App instalado. Para mandar a alguém, use o botão de compartilhar."; };
+  const marcarInstalado = () => { $("btnInstall").hidden = true; $("installHint").textContent = "App instalado neste celular."; };
   addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; $("btnInstall").hidden = false; });
   addEventListener("appinstalled", () => { deferred = null; marcarInstalado(); });
   $("btnInstall").onclick = async () => { if (!deferred) return; deferred.prompt(); const r = await deferred.userChoice.catch(() => null); deferred = null; $("btnInstall").hidden = true; if (r?.outcome === "accepted") marcarInstalado(); };
   if (instalado()) marcarInstalado();
-  $("btnShare").onclick = async () => {
-    const url = location.origin + location.pathname;
-    if (navigator.share) { try { await navigator.share({ title: "Radar Cripto", text: "Gráficos e sinais de cripto", url }); return; } catch (e) { if (e.name === "AbortError") return; } }
-    try { await navigator.clipboard.writeText(url); $("btnShare").textContent = "Link copiado"; } catch (e) { $("btnShare").textContent = url; }
-    setTimeout(() => { $("btnShare").textContent = "Compartilhar link"; }, 2500);
-  };
 }
 
 // ---------- app instalável, atualização e limpeza de avisos
