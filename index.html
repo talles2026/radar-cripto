@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radar Cripto</title>
+<meta name="description" content="Gráficos de candles da Binance com médias, IFR, MACD, suportes e resistências, leitura em português e alertas no celular.">
+<meta name="theme-color" content="#0B0F14">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --ink:#141A21; --muted:#5B6673; --line:#DDE2E8; --soft:#EEF1F5;
+  --accent:#C99A06; --accent-ink:#141A21; --up:#0E9F6E; --down:#E0424B; --warn:#D08A00; --info:#3B82F6;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B0F14; --surface:#131A22; --ink:#E6EBF0; --muted:#8C99A7; --line:#222C37; --soft:#1A232D; --accent:#F0B90B; --up:#2EBD85; --down:#F6465D;
+}}
+:root[data-theme="dark"]{ --bg:#0B0F14; --surface:#131A22; --ink:#E6EBF0; --muted:#8C99A7; --line:#222C37; --soft:#1A232D; --accent:#F0B90B; --up:#2EBD85; --down:#F6465D; }
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+button{font:inherit;color:inherit;cursor:pointer}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.down{color:var(--down)}.muted{color:var(--muted)}.small{font-size:.82rem}
+header.top{position:sticky;top:0;z-index:20;background:var(--bg);padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid var(--line)}
+header .bar{display:flex;align-items:center;gap:10px;padding:10px 0}
+.brand{font-family:var(--display);font-weight:700;font-size:1.05rem;white-space:nowrap}
+.brand i{font-style:normal;color:var(--accent)}
+.status{margin-left:auto;font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.status .dot.on{background:var(--up);box-shadow:0 0 0 3px color-mix(in srgb,var(--up) 25%,transparent)}
+.iconbtn{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+main{padding:12px 0 40px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+h2{font-family:var(--display);font-weight:700;font-size:1.02rem;margin:0 0 10px}
+.eyebrow{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+
+/* lista de moedas */
+.lista{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scroll-snap-type:x proximity}
+.lista::-webkit-scrollbar{height:0}
+.moeda{flex:none;scroll-snap-align:start;min-width:118px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:9px 11px}
+.moeda.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.moeda b{display:block;font-size:.85rem}
+.moeda .p{font-family:var(--mono);font-size:.85rem}
+.moeda .v{font-family:var(--mono);font-size:.72rem}
+.moeda.add{display:grid;place-items:center;min-width:60px;color:var(--muted);font-size:1.4rem}
+
+/* preço */
+.preco{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.preco .par{font-family:var(--display);font-weight:700;font-size:1.1rem}
+.preco .val{font-family:var(--mono);font-weight:600;font-size:clamp(1.7rem,8vw,2.3rem);line-height:1.1;letter-spacing:-.02em}
+.preco .brl{font-family:var(--mono);color:var(--muted);font-size:.9rem}
+.var{font-family:var(--mono);font-weight:600;padding:3px 8px;border-radius:8px;font-size:.85rem}
+.var.up{background:color-mix(in srgb,var(--up) 15%,transparent)}.var.down{background:color-mix(in srgb,var(--down) 15%,transparent)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.stats div{background:var(--soft);border-radius:10px;padding:7px 8px}
+.stats span{display:block;font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.stats b{font-family:var(--mono);font-weight:500;font-size:.82rem}
+
+/* gráfico */
+.tfs{display:flex;gap:4px;background:var(--soft);border-radius:12px;padding:3px;margin-bottom:8px}
+.tfs button{flex:1;border:0;background:none;padding:7px 0;border-radius:9px;font-weight:600;font-size:.85rem;color:var(--muted)}
+.tfs button.sel{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip{font-size:.74rem;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--muted)}
+.chip.on{color:var(--ink);border-color:currentColor}
+.chip i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+#grafico{height:340px}
+.sub{height:92px;margin-top:4px;position:relative}
+.sub .rot{position:absolute;left:6px;top:2px;z-index:3;font-size:.68rem;color:var(--muted);pointer-events:none}
+.legenda{font-size:.72rem;color:var(--muted);font-family:var(--mono);min-height:1.2em;margin-top:4px}
+
+/* análise */
+.vies{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.vies .selo{font-family:var(--display);font-weight:700;font-size:1.15rem;padding:6px 14px;border-radius:12px;text-transform:capitalize}
+.selo.alta,.selo.leve-alta{background:color-mix(in srgb,var(--up) 16%,transparent);color:var(--up)}
+.selo.baixa,.selo.leve-baixa{background:color-mix(in srgb,var(--down) 16%,transparent);color:var(--down)}
+.selo.neutro{background:var(--soft);color:var(--muted)}
+.medidor{flex:1;height:8px;border-radius:8px;background:linear-gradient(90deg,var(--down),var(--soft) 50%,var(--up));position:relative}
+.medidor i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--ink);transform:translateX(-50%)}
+.motivos{list-style:none;padding:0;margin:0 0 10px;display:grid;gap:6px}
+.motivos li{display:grid;grid-template-columns:18px 1fr;gap:6px;font-size:.88rem}
+.motivos li b{font-family:var(--mono)}
+.niveis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 10px}
+.niveis div{background:var(--soft);border-radius:10px;padding:8px}
+.niveis p{margin:2px 0;font-family:var(--mono);font-size:.84rem;display:flex;justify-content:space-between}
+table.mtf{width:100%;border-collapse:collapse;font-size:.82rem}
+.mtf th,.mtf td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:center}
+.mtf th{font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.mtf td:first-child,.mtf th:first-child{text-align:left}
+.mtf tr.sel td{background:var(--soft)}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.74rem;font-weight:600}
+.tag.alta,.tag.leve-alta{color:var(--up);background:color-mix(in srgb,var(--up) 14%,transparent)}
+.tag.baixa,.tag.leve-baixa{color:var(--down);background:color-mix(in srgb,var(--down) 14%,transparent)}
+.tag.neutro{color:var(--muted);background:var(--soft)}
+.aviso-leg{font-size:.74rem;color:var(--muted);margin:10px 0 0}
+.fg{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:.85rem}
+.fg b{font-family:var(--mono);font-size:1.1rem}
+
+/* alertas */
+.btn{border:0;border-radius:12px;padding:10px 15px;font-weight:600;background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.form{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin:8px 0}
+.form select,.form input,.busca input{font:inherit;font-size:16px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--ink);min-width:0}
+.alertas-lista{list-style:none;padding:0;margin:8px 0;display:grid;gap:6px}
+.alertas-lista li{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--soft);border-radius:10px;padding:8px 10px;font-size:.86rem}
+.alertas-lista button{border:0;background:none;color:var(--muted)}
+.prefs{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:10px 0}
+.prefs label{display:flex;gap:8px;align-items:center;font-size:.84rem}
+.prefs input{width:18px;height:18px;accent-color:var(--accent)}
+
+dialog{border:0;padding:0;width:100%;max-width:720px;margin:0 auto;background:var(--bg);color:var(--ink);border-radius:0 0 18px 18px;position:fixed;top:0;max-height:90vh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+.busca{padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 16px}
+.busca input{width:100%}
+.res{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px;max-height:60vh;overflow:auto}
+.res button{width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between}
+footer{font-size:.74rem;color:var(--muted);text-align:center;padding:6px 0 30px}
+footer a{color:inherit}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.88rem;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.skel{height:120px;border-radius:16px;background:linear-gradient(90deg,var(--surface),var(--soft),var(--surface));background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap bar">
+  <div class="brand">Radar <i>Cripto</i></div>
+  <div class="status"><span class="dot" id="dotVivo"></span><span id="txtVivo">conectando…</span></div>
+  <button class="iconbtn" id="btnAtualizar" aria-label="Atualizar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button>
+</div></header>
+
+<div class="wrap"><main>
+  <div class="lista" id="lista"></div>
+
+  <section class="card" id="cardPreco"><div class="skel"></div></section>
+
+  <section class="card">
+    <div class="tfs" id="tfs"></div>
+    <div class="chips" id="chips"></div>
+    <div id="grafico"></div>
+    <div class="legenda" id="legenda"></div>
+    <div class="sub" id="gRsi"><span class="rot">IFR (14)</span></div>
+    <div class="sub" id="gMacd"><span class="rot">MACD (12, 26, 9)</span></div>
+  </section>
+
+  <section class="card" id="cardAnalise"><h2>Leitura do gráfico</h2><div class="skel"></div></section>
+
+  <section class="card" id="cardAlertas"><h2>Alertas no celular</h2><div id="alertasCorpo"></div></section>
+</main>
+<footer>
+  Radar Cripto · Talles Eugenio · dados públicos da Binance · gráficos <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts</a><br>
+  Ferramenta de apoio: não é recomendação de compra ou venda. Cripto oscila muito; decida com cuidado.<br>
+  <a href="#" id="lnkTema">Tema claro/escuro</a> · <span id="versao"></span>
+</footer>
+</div>
+
+<dialog id="dlgBusca"><div class="busca">
+  <input id="qPar" type="search" placeholder="Buscar moeda (ex.: SOL, PEPE, LINK)" autocomplete="off" aria-label="Buscar moeda">
+  <ul class="res" id="resPar"></ul>
+  <div style="text-align:right;margin-top:12px"><button class="btn sec" id="fecharBusca">Fechar</button></div>
+</div></dialog>
+<div class="toast" id="toast"></div>
+
+<script src="lightweight-charts.standalone.production.js"></script>
+<script type="module">
+import { analisar, series } from "./analise.js";
+
+const APP_VERSAO = "1";
+const CONFIG = {
+  fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
+  rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
+  anon: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnd2RycnhicW9wc2ZoamdrdmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNzI0NzYsImV4cCI6MjEwODc0ODQ3Nn0.OMQnvzjJutLjlbGWq6rG7OeIK31ty-gHizNTe6rfWQI",
+  vapid: "BFTclvnkE-ZTpvhl9-0SZFruOKbH8r6DvXHgNTbsqglo0coom_VvLiPFAj8ZINlZXRqClA5-VNKZsnUJF2hC168",
+};
+// endereços da Binance: se um falhar, tenta o próximo e lembra qual funcionou
+const APIS = ["https://api.binance.com", "https://data-api.binance.vision", "https://api1.binance.com", "https://api2.binance.com", "https://api3.binance.com"];
+const WSS = ["wss://stream.binance.com:9443/stream?streams=", "wss://data-stream.binance.vision/stream?streams="];
+const TFS = [["15m","15 min"],["1h","1 hora"],["4h","4 horas"],["1d","Diário"],["1w","Semanal"]];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("rcr:" + k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem("rcr:" + k, JSON.stringify(v)); } catch(e){} },
+};
+function toast(t){ const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 2800); }
+$("versao").textContent = "versão " + APP_VERSAO;
+
+// ---------- formatos
+const casas = p => p >= 1000 ? 2 : p >= 1 ? 3 : p >= 0.01 ? 5 : 8;
+const fP = (p, d) => p == null || !isFinite(p) ? "–" : p.toLocaleString("pt-BR", { minimumFractionDigits: d ?? casas(p), maximumFractionDigits: d ?? casas(p) });
+const fBRL = p => p == null || !isFinite(p) ? "–" : p.toLocaleString("pt-BR", { style:"currency", currency:"BRL", minimumFractionDigits: p >= 1 ? 2 : 4, maximumFractionDigits: p >= 1 ? 2 : 6 });
+const fPct = v => v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : "") + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+const fVol = v => v >= 1e9 ? (v/1e9).toLocaleString("pt-BR",{maximumFractionDigits:2}) + " bi" : v >= 1e6 ? (v/1e6).toLocaleString("pt-BR",{maximumFractionDigits:1}) + " mi" : v >= 1e3 ? (v/1e3).toLocaleString("pt-BR",{maximumFractionDigits:1}) + " mil" : v.toFixed(0);
+const base = s => s.replace(/(USDT|FDUSD|USDC|BRL|BTC)$/, "");
+
+// ---------- estado
+let lista = store.get("lista", ["BTCUSDT", "ETHUSDT"]);
+let par = store.get("par", lista[0]);
+let tf = store.get("tf", "4h");
+let ind = store.get("ind", { e9:false, e21:true, e50:true, e200:true, bb:false, niveis:true });
+let usdBrl = store.get("usdbrl", null);
+const tickers = {};       // par -> {p, var, max, min, vol}
+const velas = {};         // `${par}|${tf}` -> candles
+let apiOk = store.get("api", 0);
+
+async function api(caminho){
+  for (let k = 0; k < APIS.length; k++) {
+    const i = (apiOk + k) % APIS.length;
+    try {
+      const r = await fetch(APIS[i] + caminho, { signal: AbortSignal.timeout(9000) });
+      if (r.status === 400) throw Object.assign(new Error((await r.json()).msg || "pedido inválido"), { fatal: true });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      if (i !== apiOk) { apiOk = i; store.set("api", i); }
+      return await r.json();
+    } catch (e) { if (e.fatal) throw e; }
+  }
+  throw new Error("Binance fora do ar ou sem internet");
+}
+const paraVelas = arr => arr.map(k => ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4], v: +k[5], vq: +k[7], n: k[8] }));
+async function carregarVelas(p, t){
+  const d = paraVelas(await api(`/api/v3/klines?symbol=${p}&interval=${t}&limit=${t === "1w" ? 400 : 600}`));
+  velas[`${p}|${t}`] = d; return d;
+}
+async function carregarTickers(){
+  const syms = [...new Set([...lista, par])];
+  const [ts, brl] = await Promise.all([
+    api(`/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(syms))}`),
+    api(`/api/v3/ticker/price?symbol=USDTBRL`).catch(() => null),
+  ]);
+  for (const x of ts) tickers[x.symbol] = { p: +x.lastPrice, var: +x.priceChangePercent, max: +x.highPrice, min: +x.lowPrice, vol: +x.quoteVolume };
+  if (brl) { usdBrl = +brl.price; store.set("usdbrl", usdBrl); }
+}
+
+// ---------- lista de moedas
+function renderLista(){
+  $("lista").innerHTML = lista.map(s => { const t = tickers[s] || {};
+    return `<button class="moeda ${s === par ? "sel" : ""}" data-s="${s}"><b>${base(s)}</b><div class="p">${fP(t.p)}</div><div class="v ${t.var >= 0 ? "up" : "down"}">${fPct(t.var)}</div></button>`; }).join("")
+    + `<button class="moeda add" id="btnAdd" aria-label="Adicionar moeda">+</button>`;
+  $("lista").querySelectorAll("[data-s]").forEach(b => {
+    b.onclick = () => escolher(b.dataset.s);
+    let tm; b.oncontextmenu = e => { e.preventDefault(); remover(b.dataset.s); };
+    b.ontouchstart = () => { tm = setTimeout(() => remover(b.dataset.s), 700); }; b.ontouchend = () => clearTimeout(tm);
+  });
+  $("btnAdd").onclick = abrirBusca;
+}
+function remover(s){
+  if (lista.length <= 1) return toast("Deixe pelo menos uma moeda.");
+  if (!confirm(`Tirar ${base(s)} da lista?`)) return;
+  lista = lista.filter(x => x !== s); store.set("lista", lista);
+  if (par === s) escolher(lista[0]); else { renderLista(); conectar(); }
+}
+
+// ---------- preço
+function renderPreco(){
+  const t = tickers[par]; if (!t) return;
+  const ehUsd = /USDT$|FDUSD$|USDC$/.test(par);
+  $("cardPreco").innerHTML = `<div class="preco"><div>
+      <div class="par">${base(par)} <span class="muted small">/ ${par.slice(base(par).length)}</span></div>
+      <div class="val num" id="precoVal">${fP(t.p)}</div>
+      <div class="brl" id="precoBrl">${ehUsd && usdBrl ? "≈ " + fBRL(t.p * usdBrl) : ""}</div>
+    </div><span class="var ${t.var >= 0 ? "up" : "down"}">${fPct(t.var)} <small>24h</small></span></div>
+    <div class="stats">
+      <div><span>Máx. 24h</span><b>${fP(t.max)}</b></div>
+      <div><span>Mín. 24h</span><b>${fP(t.min)}</b></div>
+      <div><span>Volume 24h</span><b>${fVol(t.vol)}</b></div>
+    </div>${ehUsd && usdBrl ? `<p class="small muted" style="margin:8px 0 0">Dólar (USDT) a ${fBRL(usdBrl)} na Binance</p>` : ""}`;
+}
+
+// ---------- gráfico
+const LC = window.LightweightCharts;
+const cor = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const CORES = { e9:"#F59E0B", e21:"#3B82F6", e50:"#A855F7", e200:"#EC4899", bb:"#64748B" };
+const NOMES = { e9:"MME 9", e21:"MME 21", e50:"MME 50", e200:"MME 200", bb:"Bollinger", niveis:"Suportes/resistências" };
+const fuso = -new Date().getTimezoneOffset() * 60;
+const tempo = ms => Math.floor(ms / 1000) + fuso;
+let G = null;
+function opcoes(h){
+  return { height: h, layout:{ background:{ color:"transparent" }, textColor: cor("--muted"), fontFamily:"IBM Plex Mono, monospace", fontSize: 11 },
+    grid:{ vertLines:{ color: cor("--line") + "55" }, horzLines:{ color: cor("--line") + "55" } },
+    rightPriceScale:{ borderColor: cor("--line") }, timeScale:{ borderColor: cor("--line"), timeVisible: true, secondsVisible:false, rightOffset: 4 },
+    crosshair:{ mode: 0 }, handleScale:{ axisPressedMouseMove: true }, localization:{ locale:"pt-BR", priceFormatter: p => fP(p) } };
+}
+function criarGraficos(){
+  if (G) { G.main.remove(); G.rsi.remove(); G.macd.remove(); }
+  const main = LC.createChart($("grafico"), opcoes(340));
+  const velasS = main.addCandlestickSeries({ upColor: cor("--up"), downColor: cor("--down"), wickUpColor: cor("--up"), wickDownColor: cor("--down"), borderVisible:false });
+  const volS = main.addHistogramSeries({ priceScaleId:"vol", priceFormat:{ type:"volume" }, lastValueVisible:false, priceLineVisible:false });
+  main.priceScale("vol").applyOptions({ scaleMargins:{ top: 0.82, bottom: 0 } });
+  const linhas = {};
+  for (const k of ["e9","e21","e50","e200"]) linhas[k] = main.addLineSeries({ color: CORES[k], lineWidth: k === "e200" ? 2 : 1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false });
+  const bb = ["sup","meio","inf"].map(() => main.addLineSeries({ color: CORES.bb, lineWidth: 1, lineStyle: 2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false }));
+  const sub = (fmt) => { const o = opcoes(92); o.layout.attributionLogo = false; o.timeScale = { visible:false }; o.localization = { locale:"pt-BR", priceFormatter: fmt }; return o; };
+  const rsiC = LC.createChart($("gRsi"), sub(v => v.toFixed(0)));
+  const rsiS = rsiC.addLineSeries({ color:"#A78BFA", lineWidth: 1.5, priceLineVisible:false });
+  rsiS.createPriceLine({ price:70, color: cor("--down"), lineWidth:1, lineStyle:2, axisLabelVisible:false });
+  rsiS.createPriceLine({ price:30, color: cor("--up"), lineWidth:1, lineStyle:2, axisLabelVisible:false });
+  const macdC = LC.createChart($("gMacd"), sub(v => { const a = Math.abs(v); return a >= 100 ? v.toFixed(0) : a >= 1 ? v.toFixed(2) : v.toPrecision(2); }));
+  const hS = macdC.addHistogramSeries({ priceLineVisible:false, lastValueVisible:false });
+  const mL = macdC.addLineSeries({ color:"#3B82F6", lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+  const sL = macdC.addLineSeries({ color:"#F59E0B", lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+  // sincroniza os três gráficos
+  const charts = [main, rsiC, macdC]; let travado = false;
+  charts.forEach(c => c.timeScale().subscribeVisibleLogicalRangeChange(r => {
+    if (travado || !r) return; travado = true; charts.forEach(o => o !== c && o.timeScale().setVisibleLogicalRange(r)); travado = false;
+  }));
+  main.subscribeCrosshairMove(p => {
+    const d = p.seriesData?.get(velasS);
+    if (!d) { legendaUltima(); return; }
+    const v = p.seriesData.get(volS);
+    $("legenda").innerHTML = legendaTxt(d, v?.value);
+  });
+  G = { main, velasS, volS, linhas, bb, rsiC, rsiS, macdC, hS, mL, sL, niveisLinhas: [] };
+  new ResizeObserver(() => { const w = $("grafico").clientWidth; charts.forEach(c => c.applyOptions({ width: w })); }).observe($("grafico"));
+}
+function legendaTxt(d, v){
+  const sobe = d.close >= d.open;
+  return `A <span>${fP(d.open)}</span> · Máx <span>${fP(d.high)}</span> · Mín <span>${fP(d.low)}</span> · F <span class="${sobe ? "up" : "down"}">${fP(d.close)}</span>${v != null ? ` · Vol ${fVol(v)}` : ""}`;
+}
+function legendaUltima(){ const c = velas[`${par}|${tf}`]?.at(-1); if (c) $("legenda").innerHTML = legendaTxt({ open:c.o, high:c.h, low:c.l, close:c.c }, c.v); }
+
+function desenhar(ajustar){
+  const c = velas[`${par}|${tf}`]; if (!c || !G) return;
+  const s = series(c);
+  const T = c.map(x => tempo(x.t));
+  const up = cor("--up"), dn = cor("--down");
+  G.velasS.setData(c.map((x, i) => ({ time: T[i], open: x.o, high: x.h, low: x.l, close: x.c })));
+  G.volS.setData(c.map((x, i) => ({ time: T[i], value: x.v, color: (x.c >= x.o ? up : dn) + "66" })));
+  const linha = arr => arr.map((v, i) => v == null ? null : { time: T[i], value: v }).filter(Boolean);
+  for (const k of ["e9","e21","e50","e200"]) { G.linhas[k].setData(ind[k] ? linha(s[k]) : []); }
+  [s.bb.sup, s.bb.meio, s.bb.inf].forEach((arr, j) => G.bb[j].setData(ind.bb ? linha(arr) : []));
+  G.rsiS.setData(linha(s.rsi));
+  G.hS.setData(s.macd.hist.map((v, i) => v == null ? null : { time: T[i], value: v, color: (v >= 0 ? up : dn) + "AA" }).filter(Boolean));
+  G.mL.setData(linha(s.macd.linha)); G.sL.setData(linha(s.macd.sinal));
+  G.velasS.applyOptions({ priceFormat: { type:"price", precision: casas(c.at(-1).c), minMove: 1 / 10 ** casas(c.at(-1).c) } });
+  // suportes e resistências
+  G.niveisLinhas.forEach(l => G.velasS.removePriceLine(l)); G.niveisLinhas = [];
+  const a = analises[tf];
+  if (ind.niveis && a) {
+    a.suportes.forEach(n => G.niveisLinhas.push(G.velasS.createPriceLine({ price: n.p, color: up, lineWidth: 1, lineStyle: 1, axisLabelVisible: true, title: "S" })));
+    a.resistencias.forEach(n => G.niveisLinhas.push(G.velasS.createPriceLine({ price: n.p, color: dn, lineWidth: 1, lineStyle: 1, axisLabelVisible: true, title: "R" })));
+  }
+  if (ajustar) { const n = c.length; G.main.timeScale().setVisibleLogicalRange({ from: n - 120, to: n + 3 }); }
+  legendaUltima();
+}
+function renderTfs(){
+  $("tfs").innerHTML = TFS.map(([k, n]) => `<button data-tf="${k}" class="${k === tf ? "sel" : ""}">${k === "1d" ? "1D" : k === "1w" ? "1S" : k}</button>`).join("");
+  $("tfs").querySelectorAll("button").forEach(b => b.onclick = () => { tf = b.dataset.tf; store.set("tf", tf); renderTfs(); abrirTf(); });
+  $("chips").innerHTML = Object.keys(NOMES).map(k => `<button class="chip ${ind[k] ? "on" : ""}" data-k="${k}">${CORES[k] ? `<i style="background:${CORES[k]}"></i>` : ""}${NOMES[k]}</button>`).join("");
+  $("chips").querySelectorAll("button").forEach(b => b.onclick = () => { ind[b.dataset.k] = !ind[b.dataset.k]; store.set("ind", ind); renderTfs(); desenhar(false); });
+}
+
+// ---------- análise
+const analises = {};
+const SELO = v => v.replace(" ", "-");
+async function analisarTudo(){
+  await Promise.all(TFS.map(async ([k]) => {
+    try { const c = velas[`${par}|${k}`] && k !== tf ? velas[`${par}|${k}`] : await carregarVelas(par, k); analises[k] = analisar(c); } catch (e) { analises[k] = null; }
+  }));
+  renderAnalise(); desenhar(false);
+}
+let fg = null;
+async function medoGanancia(){
+  try { const j = await (await fetch("https://api.alternative.me/fng/?limit=1")).json(); fg = j.data?.[0]; } catch (e) { fg = null; }
+}
+const FG_PT = { "Extreme Fear":"Medo extremo", "Fear":"Medo", "Neutral":"Neutro", "Greed":"Ganância", "Extreme Greed":"Ganância extrema" };
+function renderAnalise(){
+  const a = analises[tf];
+  const el = $("cardAnalise");
+  if (!a) { el.innerHTML = `<h2>Leitura do gráfico</h2><p class="muted small">Poucos candles neste tempo gráfico para uma leitura confiável.</p>`; return; }
+  const pos = Math.max(2, Math.min(98, 50 + a.pontos * 9));
+  const nomeTf = TFS.find(x => x[0] === tf)[1];
+  el.innerHTML = `<h2>Leitura do gráfico · ${nomeTf}</h2>
+    <div class="vies"><span class="selo ${SELO(a.vies)}">${a.vies}</span><div class="medidor" title="Pontuação ${a.pontos}"><i style="left:${pos}%"></i></div></div>
+    <ul class="motivos">${a.motivos.map(m => `<li><b class="${m.d > 0 ? "up" : m.d < 0 ? "down" : "muted"}">${m.d > 0 ? "▲" : m.d < 0 ? "▼" : "•"}</b><span>${esc(m.t)}</span></li>`).join("")}</ul>
+    <div class="niveis">
+      <div><span class="eyebrow">Resistências</span>${a.resistencias.length ? a.resistencias.map(n => `<p><span>${fP(n.p)}</span><span class="muted">${pctDe(n.p, a.preco)}</span></p>`).join("") : `<p class="muted">acima das máximas</p>`}</div>
+      <div><span class="eyebrow">Suportes</span>${a.suportes.length ? a.suportes.map(n => `<p><span>${fP(n.p)}</span><span class="muted">${pctDe(n.p, a.preco)}</span></p>`).join("") : `<p class="muted">abaixo das mínimas</p>`}</div>
+    </div>
+    <p class="small muted" style="margin:0 0 12px">Oscilação típica por candle (ATR): <b class="num">${fP(a.atr)}</b> (${a.atrPct?.toFixed(2).replace(".", ",")}%). Útil para não colocar ordens perto demais do preço.</p>
+    <table class="mtf"><thead><tr><th>Tempo</th><th>Viés</th><th>IFR</th><th>Tendência</th></tr></thead><tbody>
+    ${TFS.map(([k, n]) => { const x = analises[k]; if (!x) return `<tr><td>${n}</td><td colspan="3" class="muted">–</td></tr>`;
+      const tend = x.ema.e200 == null ? "–" : x.preco > x.ema.e200 ? `<span class="up">acima MME200</span>` : `<span class="down">abaixo MME200</span>`;
+      return `<tr class="${k === tf ? "sel" : ""}"><td>${n}</td><td><span class="tag ${SELO(x.vies)}">${x.vies}</span></td><td class="num ${x.rsi >= 70 ? "down" : x.rsi <= 30 ? "up" : ""}">${x.rsi?.toFixed(0) ?? "–"}</td><td class="small">${tend}</td></tr>`; }).join("")}
+    </tbody></table>
+    ${resumoGeral()}
+    ${fg ? `<div class="fg"><span>Sentimento do mercado cripto:</span><b>${fg.value}</b><span class="tag ${+fg.value >= 55 ? "alta" : +fg.value <= 45 ? "baixa" : "neutro"}">${FG_PT[fg.value_classification] || fg.value_classification}</span></div>` : ""}
+    <p class="aviso-leg">A leitura usa só candles já fechados. É uma ajuda para enxergar o gráfico, não uma ordem de compra ou venda.</p>`;
+}
+const pctDe = (p, ref) => { const v = (p / ref - 1) * 100; return (v > 0 ? "+" : "") + v.toFixed(1).replace(".", ",") + "%"; };
+function resumoGeral(){
+  const val = TFS.map(([k]) => analises[k]).filter(Boolean);
+  if (val.length < 3) return "";
+  const curto = [analises["15m"], analises["1h"]].filter(Boolean), longo = [analises["1d"], analises["1w"]].filter(Boolean);
+  const m = arr => arr.reduce((s, x) => s + x.pontos, 0) / Math.max(1, arr.length);
+  const c = m(curto), l = m(longo);
+  const dir = v => v >= 1.5 ? "de alta" : v <= -1.5 ? "de baixa" : "sem direção clara";
+  let txt = `Curto prazo ${dir(c)}; longo prazo ${dir(l)}.`;
+  if (c >= 1.5 && l <= -1.5) txt += " Pode ser só um repique dentro de uma tendência de queda.";
+  else if (c <= -1.5 && l >= 1.5) txt += " Pode ser só uma correção dentro de uma tendência de alta.";
+  else if (c >= 1.5 && l >= 1.5) txt += " Os prazos concordam para cima.";
+  else if (c <= -1.5 && l <= -1.5) txt += " Os prazos concordam para baixo.";
+  return `<p class="small" style="margin:10px 0 0"><b>Resumo:</b> ${txt}</p>`;
+}
+
+// ---------- tempo real (WebSocket)
+let ws = null, wsIdx = 0, wsTimer = null;
+function conectar(){
+  if (ws) { ws.onclose = null; ws.close(); }
+  const streams = [...new Set([...lista, par, "USDTBRL"])].map(s => s.toLowerCase() + "@miniTicker");
+  streams.push(par.toLowerCase() + "@kline_" + tf);
+  ws = new WebSocket(WSS[wsIdx % WSS.length] + streams.join("/"));
+  ws.onopen = () => { $("dotVivo").classList.add("on"); $("txtVivo").textContent = "ao vivo"; };
+  ws.onmessage = ev => {
+    const { stream, data } = JSON.parse(ev.data);
+    if (stream.toLowerCase().endsWith("@miniticker")) {
+      if (data.s === "USDTBRL") { usdBrl = +data.c; return; }
+      const t = tickers[data.s] ||= {};
+      t.p = +data.c; t.max = +data.h; t.min = +data.l; t.vol = +data.q; t.var = (+data.c / +data.o - 1) * 100;
+      atualizarPrecosTela();
+    } else if (stream.includes("@kline_")) {
+      const k = data.k; if (k.s !== par || k.i !== tf) return;
+      const c = velas[`${par}|${tf}`]; if (!c) return;
+      const v = { t: k.t, o: +k.o, h: +k.h, l: +k.l, c: +k.c, v: +k.v, vq: +k.q, n: k.n };
+      if (c.at(-1).t === v.t) c[c.length - 1] = v; else { c.push(v); analises[tf] = analisar(c); renderAnalise(); }
+      if (G) {
+        const up = cor("--up"), dn = cor("--down");
+        G.velasS.update({ time: tempo(v.t), open: v.o, high: v.h, low: v.l, close: v.c });
+        G.volS.update({ time: tempo(v.t), value: v.v, color: (v.c >= v.o ? up : dn) + "66" });
+      }
+      if (k.x) { analises[tf] = analisar(c); renderAnalise(); }
+    }
+  };
+  ws.onclose = () => { $("dotVivo").classList.remove("on"); $("txtVivo").textContent = "reconectando…"; wsIdx++; clearTimeout(wsTimer); wsTimer = setTimeout(conectar, 3000); };
+  ws.onerror = () => ws.close();
+}
+let rafPend = false;
+function atualizarPrecosTela(){
+  if (rafPend) return; rafPend = true;
+  requestAnimationFrame(() => {
+    rafPend = false;
+    document.querySelectorAll(".moeda[data-s]").forEach(b => { const t = tickers[b.dataset.s]; if (!t) return;
+      b.querySelector(".p").textContent = fP(t.p); const v = b.querySelector(".v"); v.textContent = fPct(t.var); v.className = "v " + (t.var >= 0 ? "up" : "down"); });
+    const t = tickers[par];
+    if (t && $("precoVal")) { $("precoVal").textContent = fP(t.p); if (/USDT$|FDUSD$|USDC$/.test(par) && usdBrl) $("precoBrl").textContent = "≈ " + fBRL(t.p * usdBrl); }
+    document.title = t ? `${fP(t.p)} ${base(par)} · Radar Cripto` : "Radar Cripto";
+  });
+}
+
+// ---------- busca de moedas
+let todos = null;
+async function abrirBusca(){
+  $("dlgBusca").showModal(); $("qPar").value = ""; $("resPar").innerHTML = `<li class="muted small">Carregando moedas…</li>`;
+  setTimeout(() => $("qPar").focus(), 50);
+  try {
+    if (!todos) { const all = await api("/api/v3/ticker/24hr?type=MINI"); todos = all.filter(x => /(USDT|BRL)$/.test(x.symbol) && +x.quoteVolume > 0).sort((a, b) => +b.quoteVolume - +a.quoteVolume); }
+    filtrar();
+  } catch (e) { $("resPar").innerHTML = `<li class="muted small">Não foi possível carregar a lista agora.</li>`; }
+}
+function filtrar(){
+  if (!todos) return;
+  const q = $("qPar").value.trim().toUpperCase();
+  const r = todos.filter(x => !q || x.symbol.startsWith(q) || base(x.symbol).includes(q)).slice(0, 40);
+  $("resPar").innerHTML = r.map(x => `<li><button data-s="${x.symbol}"><span><b>${base(x.symbol)}</b> <span class="muted small">/ ${x.symbol.slice(base(x.symbol).length)}</span></span><span class="num small">${lista.includes(x.symbol) ? "✓ na lista" : fP(+x.lastPrice)}</span></button></li>`).join("") || `<li class="muted small">Nada encontrado.</li>`;
+  $("resPar").querySelectorAll("button").forEach(b => b.onclick = () => { const s = b.dataset.s; if (!lista.includes(s)) { lista.push(s); store.set("lista", lista); } $("dlgBusca").close(); escolher(s); });
+}
+$("qPar").oninput = filtrar;
+$("fecharBusca").onclick = () => $("dlgBusca").close();
+
+// ---------- fluxo principal
+async function abrirTf(){
+  try { await carregarVelas(par, tf); } catch (e) { toast(e.message); return; }
+  analises[tf] = analisar(velas[`${par}|${tf}`]);
+  desenhar(true); renderAnalise(); conectar();
+}
+async function escolher(s){
+  par = s; store.set("par", par);
+  for (const k of Object.keys(analises)) delete analises[k];
+  renderLista();
+  try { await carregarTickers(); } catch (e) { toast(e.message); }
+  renderLista(); renderPreco();
+  await abrirTf();
+  analisarTudo();
+  renderAlertas();
+}
+async function iniciar(){
+  renderTfs(); criarGraficos();
+  const u = new URLSearchParams(location.search).get("par");
+  if (u && /^[A-Z0-9]{5,20}$/.test(u)) { if (!lista.includes(u)) { lista.push(u); store.set("lista", lista); } par = u; }
+  await Promise.all([escolher(par), medoGanancia()]);
+  renderAnalise();
+  setInterval(() => carregarTickers().then(() => { renderLista(); renderPreco(); }).catch(() => {}), 60000);
+  setInterval(() => analisarTudo(), 5 * 60000);
+}
+$("btnAtualizar").onclick = () => { for (const k of Object.keys(velas)) delete velas[k]; escolher(par); };
+$("lnkTema").onclick = e => { e.preventDefault(); const n = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = n; store.set("tema", n); criarGraficos(); desenhar(true); };
+{ const t = store.get("tema"); if (t) document.documentElement.dataset.theme = t; }
+
+// ---------- alertas no celular
+const AUTO = [["rsi","IFR em extremo (sobrecompra/sobrevenda)"],["macd","Virada do MACD"],["cruz","Cruzamento das médias 50/200"],["rompe","Rompimento de máxima/mínima"],["volume","Volume muito acima da média"],["movimento","Movimento forte (3% em 1h)"]];
+function b64(s){ const p = "=".repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); }
+async function inscricao(){ if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
+async function rpc(fn, body){
+  const r = await fetch(CONFIG.rest + fn, { method:"POST", headers:{ apikey:CONFIG.anon, Authorization:"Bearer " + CONFIG.anon, "Content-Type":"application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text()); const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+let alertas = store.get("alertas", []);   // {id, par, tipo: "acima"|"abaixo", valor}
+let prefs = store.get("prefs", { auto: { rsi:true, macd:false, cruz:true, rompe:true, volume:false, movimento:true }, tfs: ["4h","1d"] });
+async function salvarServidor(){
+  const s = await inscricao(); if (!s) return;
+  const j = s.toJSON();
+  await rpc("cripto_salvar", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_pares: lista, p_alertas: alertas, p_prefs: prefs });
+}
+async function sincronizarAlertas(){
+  const s = await inscricao().catch(() => null); if (!s) return;
+  try { const r = await rpc("cripto_meus_alertas", { p_endpoint: s.endpoint }); if (Array.isArray(r)) { alertas = r; store.set("alertas", alertas); } } catch (e) {}
+}
+async function renderAlertas(){
+  const el = $("alertasCorpo");
+  const suporta = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (!suporta) { el.innerHTML = ios && !standalone ? `<p class="small">No iPhone, os alertas funcionam com o app na Tela de Início: Compartilhar → Adicionar à Tela de Início.</p>` : `<p class="small muted">Este navegador não aceita alertas. No Android use o Chrome.</p>`; return; }
+  const sub = await inscricao().catch(() => null);
+  const t = tickers[par];
+  if (!sub) {
+    el.innerHTML = `<p class="small" style="margin:0 0 10px">Receba aviso quando o preço chegar onde você quer, e quando o gráfico mostrar um sinal importante nas moedas da sua lista. Chega mesmo com o app fechado.</p><button class="btn" id="aLigar">🔔 Ligar alertas</button>`;
+    $("aLigar").onclick = async () => {
+      try {
+        if (await Notification.requestPermission() !== "granted") return toast("Permissão negada. Libere as notificações nas configurações.");
+        const reg = await navigator.serviceWorker.ready;
+        await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(CONFIG.vapid) });
+        await salvarServidor(); toast("Alertas ligados!"); renderAlertas();
+      } catch (e) { toast("Não foi possível ligar: " + e.message); }
+    };
+    return;
+  }
+  const meus = alertas.filter(a => a.par === par);
+  el.innerHTML = `
+    <p class="eyebrow" style="margin:0">Alerta de preço · ${base(par)}</p>
+    <div class="form"><select id="aTipo"><option value="acima">Subir acima de</option><option value="abaixo">Cair abaixo de</option></select>
+      <input id="aValor" type="number" inputmode="decimal" step="any" placeholder="${t ? fP(t.p).replace(/\./g, "").replace(",", ".") : "preço"}"><button class="btn" id="aAdd">Criar</button></div>
+    <ul class="alertas-lista">${alertas.map(a => `<li><span><b>${base(a.par)}</b> ${a.tipo === "acima" ? "subir acima de" : "cair abaixo de"} <b class="num">${fP(a.valor)}</b></span><button data-id="${a.id}" aria-label="Apagar">✕</button></li>`).join("") || `<li class="muted">Nenhum alerta de preço criado.</li>`}</ul>
+    <p class="eyebrow" style="margin:14px 0 0">Sinais automáticos nas moedas da lista</p>
+    <div class="prefs">${AUTO.map(([k, n]) => `<label><input type="checkbox" data-a="${k}" ${prefs.auto[k] ? "checked" : ""}>${n}</label>`).join("")}</div>
+    <p class="eyebrow" style="margin:6px 0 0">Nos tempos gráficos</p>
+    <div class="prefs">${[["1h","1 hora"],["4h","4 horas"],["1d","Diário"]].map(([k, n]) => `<label><input type="checkbox" data-t="${k}" ${prefs.tfs.includes(k) ? "checked" : ""}>${n}</label>`).join("")}</div>
+    <div class="btns"><button class="btn sec" id="aTeste">Enviar teste</button><button class="btn sec" id="aDesligar">Desligar alertas</button></div>`;
+  $("aAdd").onclick = async () => {
+    const v = parseFloat(String($("aValor").value).replace(",", "."));
+    if (!isFinite(v) || v <= 0) return toast("Digite um preço válido.");
+    const tipo = $("aTipo").value;
+    if (t && ((tipo === "acima" && v <= t.p) || (tipo === "abaixo" && v >= t.p))) return toast(tipo === "acima" ? "Esse preço já está abaixo do atual." : "Esse preço já está acima do atual.");
+    alertas.push({ id: Date.now().toString(36), par, tipo, valor: v }); store.set("alertas", alertas);
+    try { await salvarServidor(); toast("Alerta criado."); } catch (e) { toast("Não salvou no servidor: " + e.message); }
+    renderAlertas();
+  };
+  el.querySelectorAll("[data-id]").forEach(b => b.onclick = async () => { alertas = alertas.filter(a => a.id !== b.dataset.id); store.set("alertas", alertas); try { await salvarServidor(); } catch (e) {} renderAlertas(); });
+  el.querySelectorAll("[data-a]").forEach(c => c.onchange = async () => { prefs.auto[c.dataset.a] = c.checked; store.set("prefs", prefs); try { await salvarServidor(); toast("Salvo."); } catch (e) { toast("Não salvou."); } });
+  el.querySelectorAll("[data-t]").forEach(c => c.onchange = async () => { prefs.tfs = c.checked ? [...new Set([...prefs.tfs, c.dataset.t])] : prefs.tfs.filter(x => x !== c.dataset.t); store.set("prefs", prefs); try { await salvarServidor(); toast("Salvo."); } catch (e) { toast("Não salvou."); } });
+  $("aTeste").onclick = async () => { try { const r = await (await fetch(CONFIG.fn, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ acao:"teste", endpoint: sub.endpoint }) })).json(); toast(r.ok ? "Teste enviado." : "Falhou: " + (r.erro || "")); } catch (e) { toast("Falhou: " + e.message); } };
+  $("aDesligar").onclick = async () => { await rpc("cripto_remover", { p_endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe(); toast("Alertas desligados."); renderAlertas(); };
+}
+
+// ---------- app instalável, atualização e limpeza de avisos
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").then(r => r.update()).catch(() => {});
+async function conferirVersao(){
+  try { const v = (await (await fetch("versao.json?t=" + Date.now(), { cache:"no-store" })).json()).v;
+    if (v && v !== APP_VERSAO && store.get("recarregou") !== v) { store.set("recarregou", v); location.reload(); } } catch (e) {}
+}
+async function limparAvisos(){
+  try { if (navigator.clearAppBadge) await navigator.clearAppBadge(); } catch (e) {}
+  try { if ("serviceWorker" in navigator) { const reg = await navigator.serviceWorker.ready; (await reg.getNotifications()).forEach(n => n.close()); } } catch (e) {}
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) return;
+  conferirVersao(); limparAvisos(); sincronizarAlertas().then(renderAlertas);
+  if (!ws || ws.readyState > 1) conectar();
+  carregarTickers().then(() => { renderLista(); renderPreco(); }).catch(() => {});
+});
+conferirVersao(); limparAvisos(); sincronizarAlertas();
+iniciar();
+</script>
+</body>
+</html>
