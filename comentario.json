@@ -1,0 +1,30 @@
+{
+ "data": "2026-10-28T13:25:00Z",
+ "titulo": "BTC volta aos US$ 81 mil à espera do Fed",
+ "texto": "O bitcoin subiu cerca de 1,9% hoje e era negociado perto de US$ 81,4 mil no início da tarde (UTC), com o mercado cauteloso antes da decisão de juros do Fed, marcada para hoje, em que a maioria espera manutenção da taxa. Na véspera (27/10), os ETFs de bitcoin nos EUA receberam US$ 176 milhões líquidos, enquanto os de ether tiveram saída de US$ 60 milhões, sinal de interesse maior no BTC do que no ETH. Em Washington, o secretário do Tesouro, Scott Bessent, disse que vai trabalhar com SEC e CFTC para avançar regras para cripto enquanto a lei CLARITY segue travada no Congresso. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado.",
+ "pontos": [
+  "Hoje (28/10): decisão do Fed e entrevista do presidente Kevin Warsh; o tom sobre próximos cortes pode mexer no preço.",
+  "Quinta (29/10): inflação PCE de setembro, PIB do 3º trimestre e pedidos de seguro-desemprego nos EUA.",
+  "Sexta (30/10): vencimento de cerca de US$ 11 a 12 bilhões em opções de bitcoin; US$ 78 mil é citado como suporte importante.",
+  "Fluxo dos ETFs: veja se a entrada no bitcoin continua e se a saída no ether diminui.",
+  "Regulação nos EUA: possíveis medidas de SEC e CFTC no lugar da lei CLARITY."
+ ],
+ "fontes": [
+  {
+   "nome": "Ad-hoc News – preço do BTC (28/10)",
+   "url": "https://www.ad-hoc-news.de/boerse/news/marktberichte/bitcoin-price-stands-at-81-385-80-usd-with-a-1-88-percent-move/70425455"
+  },
+  {
+   "nome": "FinanceFeeds – fluxo dos ETFs (27/10)",
+   "url": "https://financefeeds.com/us-crypto-etfs-record-96-6-million-in-net-inflows-on-october-27-as-bitcoin-leads-institutional-demand/"
+  },
+  {
+   "nome": "Coinpedia – agenda da semana",
+   "url": "https://coinpedia.org/news/crypto-markets-brace-for-volatility-as-fed-decision-gdp-data-and-12b-bitcoin-options-expiry-loom/"
+  },
+  {
+   "nome": "Bloomingbit – Bessent e regulação",
+   "url": "https://en.bloomingbit.io/feed/news/123109"
+  }
+ ]
+}
