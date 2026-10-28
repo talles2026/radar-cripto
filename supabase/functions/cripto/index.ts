@@ -5,6 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import webpush from "npm:web-push@3.6.7";
 import { analisar } from "./analise.js";
 import { calcular } from "./probabilidades.js";
+import { filtrarUniverso, medir, montar } from "./scanner.js";
 
 const SITE = "https://talles2026.github.io/radar-cripto/";
 const APIS = ["https://api.binance.com", "https://data-api.binance.vision", "https://api1.binance.com", "https://api2.binance.com"];
@@ -96,6 +97,30 @@ async function estatisticas(par: string, tf: string, forcar = false) {
   return r;
 }
 
+
+// ---------------------------------------------------------------- radar do mercado
+async function radarMercado() {
+  const { data: c } = await db.from("cripto_estat").select("dados,criado").eq("par", "*").eq("tf", "scan").maybeSingle();
+  if (c && Date.now() - Date.parse(c.criado) < 14 * 60e3) return { ...c.dados, cache: true };
+  const todos = await binance("/api/v3/ticker/24hr");
+  const uni = filtrarUniverso(todos ?? [], 80);
+  const medidas: any[] = [];
+  const falhas: J[] = [];
+  const medirUm = async (t: J) => {
+    try { const k = await binance(`/api/v3/klines?symbol=${t.s}&interval=1d&limit=400`); if (!k) { falhas.push(t); return null; } return medir(t, k); }
+    catch (_) { falhas.push(t); return null; }
+  };
+  for (let i = 0; i < uni.length; i += 5) medidas.push(...await Promise.all(uni.slice(i, i + 5).map(medirUm)));
+  // segunda tentativa, uma por vez, para as que falharam
+  const repetir = falhas.splice(0);
+  for (const t of repetir) medidas.push(await medirUm(t));
+  const btc = medidas.find((x: any) => x?.s === "BTCUSDT");
+  const out: J = montar(medidas, btc);
+  out.atualizado = new Date().toISOString(); out.falhas = falhas.length;
+  if (medidas.filter(Boolean).length >= 20) await db.from("cripto_estat").upsert({ par: "*", tf: "scan", dados: out, criado: out.atualizado });
+  return out;
+}
+
 async function rodar() {
   const { data: subs } = await db.from("cripto_inscricoes").select("*");
   if (!subs?.length) return { inscricoes: 0 };
@@ -185,6 +210,12 @@ Deno.serve(async (req: Request) => {
     try {
       const r = await estatisticas(par, tf);
       return new Response(JSON.stringify(r), { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=600" } });
+    } catch (e: any) { return resp({ erro: String(e?.message ?? e) }, 502); }
+  }
+  if (req.method === "GET" && u.searchParams.get("acao") === "mercado") {
+    try {
+      const r = await radarMercado();
+      return new Response(JSON.stringify(r), { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=300" } });
     } catch (e: any) { return resp({ erro: String(e?.message ?? e) }, 502); }
   }
   const corpo = await req.json().catch(() => ({}));

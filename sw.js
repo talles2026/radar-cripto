@@ -1,5 +1,5 @@
 // Radar Cripto: dados sempre da rede quando houver sinal; sem sinal, mostra a última versão salva.
-const CACHE = "radar-cripto-v2";
+const CACHE = "radar-cripto-v3";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "analise.js", "lightweight-charts.standalone.production.js"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

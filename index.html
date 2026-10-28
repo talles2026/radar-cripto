@@ -152,6 +152,22 @@ details.mais summary{cursor:pointer;color:var(--muted);font-size:.84rem;margin-t
 /* comentário */
 #cardComent p{margin:0 0 6px;font-size:.92rem}
 #cardComent ul{margin:6px 0;padding-left:18px;font-size:.88rem}
+
+/* radar do mercado */
+.abas{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px}
+.abas::-webkit-scrollbar{height:0}
+.abas button{flex:none;border:1px solid var(--line);background:none;color:var(--muted);border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:600}
+.abas button.sel{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mlista{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.mlista button{width:100%;text-align:left;background:var(--soft);border:0;border-radius:12px;padding:9px 11px;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.mlista b{font-size:.92rem}
+.mlista .pv{font-family:var(--mono);font-size:.82rem;text-align:right}
+.mlista .mot{grid-column:1/-1;font-size:.78rem;color:var(--muted)}
+.clima{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.clima div{background:var(--soft);border-radius:10px;padding:7px 8px;text-align:center}
+.clima b{display:block;font-family:var(--mono);font-size:1rem}
+.clima span{font-size:.66rem;color:var(--muted)}
+.cenario{background:var(--soft);border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:.88rem}
 dialog{border:0;padding:0;width:100%;max-width:720px;margin:0 auto;background:var(--bg);color:var(--ink);border-radius:0 0 18px 18px;position:fixed;top:0;max-height:90vh;overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.55)}
 .busca{padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 16px}
@@ -179,6 +195,8 @@ footer a{color:inherit}
   <section class="card" id="cardPreco"><div class="skel"></div></section>
 
   <section class="card" id="cardComent" hidden></section>
+
+  <section class="card" id="cardMercado"><h2>Radar do mercado</h2><div class="skel" style="height:90px"></div></section>
 
   <section class="card">
     <div class="tfs" id="tfs"></div>
@@ -215,7 +233,7 @@ footer a{color:inherit}
 <script type="module">
 import { analisar, series } from "./analise.js";
 
-const APP_VERSAO = "2";
+const APP_VERSAO = "3";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -516,9 +534,11 @@ function renderEstat(d, t){
     ? `<li>✅ <b>${esc(x.sinal)}</b> funcionou: o preço foi na direção esperada (${x.espera}) em ${pc(x.acerto)} das ${x.casos} vezes; o normal é ${pc(x.baseDir)}.</li>`
     : `<li>⚠️ <b>${esc(x.sinal)}</b> costuma enganar: em ${pc(1 - x.acerto)} das ${x.casos} vezes o preço foi para o lado contrário ao esperado.</li>`);
   const destHtml = dest.length ? `<p class="eyebrow" style="margin:12px 0 4px">Lições do histórico (${pl.horizonte} depois)</p><ul class="linhas">${dest.join("")}</ul>` : "";
+  const hL = d.horizontes[d.horizontes.length - 1];
+  const cenario = hL?.parecidos ? `<div class="cenario"><b>Cenário para os próximos ${hL.nome}:</b> o mais provável é o preço ficar entre <b class="num">${fP(hL.faixa.p70[0])}</b> e <b class="num">${fP(hL.faixa.p70[1])}</b> (7 em 10 vezes). Em situações parecidas, terminou mais alto em <b>${pc(hL.parecidos.sobe)}</b> dos casos, contra ${pc(hL.base.sobe)} normalmente${T && T.habilidade <= 0 ? ", mas esse sinal não mostrou vantagem no teste" : ""}.</div>` : "";
   el.innerHTML = `<h2>O que o histórico diz · ${base(par)} ${NOME_EST[t]}</h2>
     <p class="small muted" style="margin:-4px 0 10px">Procuramos nos ${d.velas.toLocaleString("pt-BR")} candles desde ${new Date(d.desde).toLocaleDateString("pt-BR", { month:"short", year:"numeric" })} os momentos mais parecidos com o de agora (tendência, IFR, MACD, volatilidade) e medimos o que veio depois.${tf === "15m" || tf === "1w" ? ` Para o gráfico de ${tf === "15m" ? "15 min" : "semana"}, usamos o de ${NOME_EST[t]}.` : ""}</p>
-    ${hz}${selo}${destHtml}${placarHtml}
+    ${cenario}${hz}${selo}${destHtml}${placarHtml}
     <p class="aviso-leg">Estatística do passado não garante o futuro. Notícias e eventos grandes mudam tudo.</p>`;
 }
 
@@ -583,6 +603,31 @@ async function carregarComentario(){
       ${c.fontes?.length ? `<p class="small muted">Fontes: ${c.fontes.map(f => `<a href="${esc(f.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(f.nome)}</a>`).join(" · ")}</p>` : ""}`;
   } catch (e) {}
 }
+
+
+// ---------- radar do mercado (varredura das maiores moedas, feita no servidor a cada 15 min)
+const ABAS = [["fortes","Mais fortes"],["rompendo","Rompendo"],["recuos","Recuos na alta"],["volume","Volume anormal"],["fracas","Mais fracas"]];
+let mercado = null, aba = store.get("aba", "fortes");
+async function carregarMercado(){
+  try { const r = await fetch(`${CONFIG.fn}?acao=mercado`, { signal: AbortSignal.timeout(60000) }); mercado = await r.json(); if (mercado.erro) throw 0; renderMercado(); }
+  catch (e) { $("cardMercado").innerHTML = `<h2>Radar do mercado</h2><p class="small muted">Não foi possível varrer o mercado agora.</p>`; }
+}
+function renderMercado(){
+  const m = mercado; if (!m) return;
+  const a = m.amplitude || {};
+  const itens = m[aba] || [];
+  const desc = { fortes:"Em tendência de alta e subindo mais que as outras (força relativa).", rompendo:"Passaram hoje da máxima de 20 dias, com volume acima do normal.", recuos:"Em tendência de alta, mas recuaram para perto da média de 50 dias.", volume:"Negociação muito acima do normal hoje: algo está acontecendo.", fracas:"Em tendência de baixa e caindo mais que as outras." }[aba];
+  $("cardMercado").innerHTML = `<h2>Radar do mercado</h2>
+    <p class="small" style="margin:-4px 0 10px"><b>${esc(a.leitura || "")}</b></p>
+    <div class="clima"><div><b>${pc(a.acima200)}</b><span>acima da média 200d</span></div><div><b>${pc(a.acima50)}</b><span>acima da média 50d</span></div><div><b class="${(a.btc30 ?? 0) >= 0 ? "up" : "down"}">${pr(a.btc30)}</b><span>BTC em 30 dias</span></div></div>
+    <div class="abas">${ABAS.map(([k, n]) => `<button data-a="${k}" class="${k === aba ? "sel" : ""}">${n}${m[k]?.length ? ` · ${m[k].length}` : ""}</button>`).join("")}</div>
+    <p class="small muted" style="margin:0 0 8px">${desc}</p>
+    <ul class="mlista">${itens.map(x => `<li><button data-s="${x.s}"><b>${esc(x.b)}</b><span class="pv">${fP(x.p)} <span class="${x.var24 >= 0 ? "up" : "down"}">${fPct(x.var24)}</span></span><span class="mot">${esc(x.motivo)}</span></button></li>`).join("") || `<li class="small muted">Nenhuma moeda nesse grupo agora.</li>`}</ul>
+    <p class="aviso-leg">Varredura das ${a.moedas || 80} moedas com mais volume na Binance, pelo gráfico diário · ${new Date(m.atualizado).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" })}. Mostra onde está o movimento, não o que vai acontecer. Toque numa moeda para abrir o gráfico.</p>`;
+  $("cardMercado").querySelectorAll("[data-a]").forEach(b => b.onclick = () => { aba = b.dataset.a; store.set("aba", aba); renderMercado(); });
+  $("cardMercado").querySelectorAll("[data-s]").forEach(b => b.onclick = () => { const s = b.dataset.s; addLista(s); escolher(s); scrollTo({ top: 0, behavior: "smooth" }); });
+}
+function addLista(s){ if (!lista.includes(s)) { lista.push(s); store.set("lista", lista); } }
 
 // ---------- tempo real (WebSocket)
 let ws = null, wsIdx = 0, wsTimer = null;
@@ -668,7 +713,7 @@ async function iniciar(){
   renderTfs(); criarGraficos();
   const u = new URLSearchParams(location.search).get("par");
   if (u && /^[A-Z0-9]{5,20}$/.test(u)) { if (!lista.includes(u)) { lista.push(u); store.set("lista", lista); } par = u; }
-  carregarComentario();
+  carregarComentario(); carregarMercado(); setInterval(carregarMercado, 15 * 60000);
   await Promise.all([escolher(par), medoGanancia()]);
   renderAnalise();
   setInterval(() => carregarTickers().then(() => { renderLista(); renderPreco(); }).catch(() => {}), 60000);
