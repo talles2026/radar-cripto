@@ -147,6 +147,35 @@ details.mais summary{cursor:pointer;color:var(--muted);font-size:.84rem;margin-t
 .dobra:focus-visible{outline:2px solid var(--line);outline-offset:4px;border-radius:10px}
 .coment-corpo{margin-top:10px}
 #cardComent:not(.aberto) .coment-corpo{display:none}
+/* pontos de entrada e saída */
+.veredito{border-radius:14px;padding:12px 14px;margin:0 0 12px}
+.veredito.compra{background:color-mix(in srgb,var(--up) 15%,transparent);border:1px solid color-mix(in srgb,var(--up) 45%,transparent)}
+.veredito.venda{background:color-mix(in srgb,var(--down) 14%,transparent);border:1px solid color-mix(in srgb,var(--down) 45%,transparent)}
+.veredito.olho{background:color-mix(in srgb,var(--warn) 13%,transparent)}
+.veredito.posicao{background:color-mix(in srgb,var(--info) 13%,transparent)}
+.veredito.nada{background:var(--soft)}
+.veredito .tit{font-family:var(--display);font-weight:700;font-size:1.1rem;margin:0 0 4px}
+.veredito p{margin:4px 0;font-size:.88rem}
+.plano{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:10px 0 6px}
+.plano div{background:var(--surface);border-radius:10px;padding:7px 9px}
+.plano span{display:block;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.plano b{font-family:var(--mono);font-size:.92rem}
+.regras{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.regras>li{background:var(--soft);border-radius:12px;padding:10px 12px}
+.regras .cab{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.regras .cab b{font-size:.92rem}
+.regras .num2{font-family:var(--mono);font-size:.8rem}
+.regras p{margin:6px 0 0;font-size:.82rem}
+.est{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:700}
+.est.comprar{background:var(--up);color:#06130d}.est.vender{background:var(--down);color:#fff}
+.est.posicao{background:color-mix(in srgb,var(--info) 25%,transparent);color:var(--info)}
+.est.armado{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.est.fora{background:var(--surface);color:var(--muted)}
+.nt{font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:999px}
+.nt.bom{color:var(--up);background:color-mix(in srgb,var(--up) 14%,transparent)}
+.nt.medio{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.nt.ruim{color:var(--down);background:color-mix(in srgb,var(--down) 12%,transparent)}
+.nt.pouco{color:var(--muted);background:var(--surface)}
 /* calculadora */
 .calc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .calc label{font-size:.74rem;color:var(--muted);display:grid;gap:3px}
@@ -218,6 +247,8 @@ footer a{color:inherit}
 
   <section class="card" id="cardAnalise"><h2>Leitura do gráfico</h2><div class="skel"></div></section>
 
+  <section class="card" id="cardSetups"><h2>Pontos de entrada e saída</h2><div class="skel"></div></section>
+
   <section class="card" id="cardProb"><h2>O que o histórico diz</h2><div class="skel"></div></section>
 
   <section class="card" id="cardRisco"><h2>Calculadora de risco</h2><div id="riscoCorpo"></div></section>
@@ -241,8 +272,9 @@ footer a{color:inherit}
 <script src="lightweight-charts.standalone.production.js"></script>
 <script type="module">
 import { analisar, series } from "./analise.js";
+import { situacao } from "./setups.js";
 
-const APP_VERSAO = "4";
+const APP_VERSAO = "5";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -433,7 +465,7 @@ async function analisarTudo(){
   await Promise.all(TFS.map(async ([k]) => {
     try { const c = velas[`${par}|${k}`] && k !== tf ? velas[`${par}|${k}`] : await carregarVelas(par, k); analises[k] = analisar(c); } catch (e) { analises[k] = null; }
   }));
-  renderAnalise(); desenhar(false); renderRisco();
+  renderAnalise(); desenhar(false); renderRisco(); renderSetups();
 }
 let fg = null;
 async function medoGanancia(){
@@ -496,7 +528,7 @@ async function carregarEstat(){
     const d = await r.json();
     if (d.erro) throw new Error(d.erro);
     estCache[k] = { em: Date.now(), d };
-    if (TF_EST[tf] === t && d.par === par) renderEstat(d, t);
+    if (TF_EST[tf] === t && d.par === par) { renderEstat(d, t); renderSetups(); }
   } catch (e) { el.innerHTML = `<h2>O que o histórico diz</h2><p class="small muted">Não foi possível calcular agora (${esc(e.message)}). Moedas muito novas não têm histórico suficiente.</p>`; }
 }
 function renderEstat(d, t){
@@ -549,6 +581,89 @@ function renderEstat(d, t){
     <p class="small muted" style="margin:-4px 0 10px">Procuramos nos ${d.velas.toLocaleString("pt-BR")} candles desde ${new Date(d.desde).toLocaleDateString("pt-BR", { month:"short", year:"numeric" })} os momentos mais parecidos com o de agora (tendência, IFR, MACD, volatilidade) e medimos o que veio depois.${tf === "15m" || tf === "1w" ? ` Para o gráfico de ${tf === "15m" ? "15 min" : "semana"}, usamos o de ${NOME_EST[t]}.` : ""}</p>
     ${cenario}${hz}${selo}${destHtml}${placarHtml}
     <p class="aviso-leg">Estatística do passado não garante o futuro. Notícias e eventos grandes mudam tudo.</p>`;
+}
+
+// ---------- pontos de entrada e saída
+// As regras ficam em setups.js. A situação de agora é calculada aqui, com os candles ao vivo;
+// o placar de cada regra (anos de histórico, com taxas) vem do servidor junto com "O que o histórico diz".
+const EST_TXT = { comprar:"COMPRAR", vender:"VENDER", posicao:"Comprado", armado:"De olho", fora:"Sem sinal" };
+const NT_TXT = { bom:"funcionou", medio:"lucro pequeno", ruim:"não funcionou", pouco:"poucos casos" };
+let planoCalc = null;
+function renderSetups(){
+  const el = $("cardSetups"); const t = TF_EST[tf];
+  const c = velas[`${par}|${t}`];
+  const nomeT = NOME_EST[t];
+  if (!c) { el.innerHTML = `<h2>Pontos de entrada e saída</h2><div class="skel"></div>`; return; }
+  const S = situacao(c);
+  if (!S) { el.innerHTML = `<h2>Pontos de entrada e saída</h2><p class="small muted">Poucos candles para aplicar as regras neste tempo gráfico.</p>`; return; }
+  const est = estCache[par + "|" + t]?.d;
+  const P = est?.setups?.setups || null;
+  const nv = id => P?.[id]?.nota?.nivel || null;
+  const confiavel = x => ["bom","medio"].includes(nv(x.id));
+  const brl = v => /USDT$|FDUSD$|USDC$/.test(par) && usdBrl ? ` <span class="muted small">(${fBRL(v * usdBrl)})</span>` : "";
+  const ordem = { bom:0, medio:1, pouco:2, ruim:3, null:2 };
+  const porNota = arr => [...arr].sort((a, b) => ordem[nv(a.id)] - ordem[nv(b.id)]);
+  const hist = x => { const h = P?.[x.id]; return h?.trades ? `${h.trades} operações, acerto de ${pc(h.acerto)}, média de ${pr(h.retMedio)} por operação` : ""; };
+
+  // veredito: o que fazer agora
+  const vend = porNota(S.setups.filter(x => x.estado === "vender"))[0];
+  const comp = porNota(S.setups.filter(x => x.estado === "comprar" && nv(x.id) !== "ruim"))[0];
+  const pos = porNota(S.setups.filter(x => x.estado === "posicao" && nv(x.id) !== "ruim"))[0];
+  const olho = porNota(S.setups.filter(x => x.estado === "armado" && nv(x.id) !== "ruim"))[0];
+  let ver = "";
+  planoCalc = null;
+  if (comp) {
+    planoCalc = { ent: comp.entrada, stop: comp.stop0, alvo: comp.alvo1 };
+    ver = `<div class="veredito compra"><div class="tit">🟢 Sinal de compra · ${esc(comp.nome)}</div>
+      <p>${esc(comp.txt)}</p>
+      <div class="plano"><div><span>Entrada</span><b>${fP(comp.entrada)}</b>${brl(comp.entrada)}</div><div><span>Stop (sair se cair a)</span><b class="down">${fP(comp.stop0)}</b> <span class="muted small">${pr(comp.stop0 / comp.entrada - 1)}</span></div>
+      <div><span>Alvo 1 (realizar metade)</span><b class="up">${fP(comp.alvo1)}</b> <span class="muted small">${pr(comp.alvo1 / comp.entrada - 1)}</span></div><div><span>Alvo 2 / deixar correr</span><b class="up">${fP(comp.alvo2)}</b> <span class="muted small">${pr(comp.alvo2 / comp.entrada - 1)}</span></div></div>
+      <p class="small"><b>Quando vender:</b> ${esc(comp.saidaRegra)}</p>
+      ${P ? `<p class="small">${confiavel(comp) ? "✅" : "⚖️"} No histórico de ${base(par)} (${nomeT}): ${hist(comp)}. ${esc(P[comp.id]?.nota?.txt || "")}</p>` : `<p class="small muted">Calculando o placar desta regra no histórico…</p>`}
+      <button class="btn" id="sLevar" type="button" style="margin-top:6px">Calcular quanto comprar</button></div>`;
+  } else if (vend) {
+    ver = `<div class="veredito venda"><div class="tit">🔴 Sinal de venda · ${esc(vend.nome)}</div>
+      <p>A regra comprou a <b class="num">${fP(vend.entrada)}</b> em ${new Date(vend.desde).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" })} e agora mandou sair: <b>${esc(vend.motivoSaida)}</b>. Resultado da operação: <b class="num ${vend.ret >= 0 ? "up" : "down"}">${pr(vend.ret)}</b>.</p>
+      <p class="small">Se você comprou junto, a regra diz vender na abertura da próxima vela.</p></div>`;
+  } else if (pos) {
+    ver = `<div class="veredito posicao"><div class="tit">🔵 Regra comprada · ${esc(pos.nome)}</div>
+      <p>Comprou a <b class="num">${fP(pos.entrada)}</b> em ${new Date(pos.desde).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" })} (${pr(pos.ret)} até agora). Não é mais ponto de entrada ideal, mas a operação segue viva.</p>
+      <p><b>Vender ${pos.fechaAbaixo ? `se fechar uma vela abaixo de <span class="num down">${fP(pos.fechaAbaixo)}</span>` : ""}${pos.fechaAbaixo ? " ou " : ""}se o preço tocar <span class="num down">${fP(pos.stop)}</span></b> (stop ${pos.stop > pos.stop0 ? "móvel, já subiu junto com o preço" : "de segurança"}).${pos.cruzamento ? ` Também vende se a média de 21 (${fP(pos.cruzamento.e21)}) cruzar abaixo da de 50 (${fP(pos.cruzamento.e50)}).` : ""}</p></div>`;
+  } else if (olho) {
+    ver = `<div class="veredito olho"><div class="tit">🟡 De olho · ${esc(olho.nome)}</div><p>${esc(olho.txt)}</p>
+      ${olho.gatilho ? `<p><b>Compra se fechar acima de <span class="num">${fP(olho.gatilho)}</span></b>${brl(olho.gatilho)}, com stop perto de <span class="num">${fP(olho.stop)}</span>. Dá para criar um alerta de preço nesse valor lá embaixo.</p>` : ""}</div>`;
+  } else {
+    ver = `<div class="veredito nada"><div class="tit">⚪ Sem ponto de entrada agora</div><p>Nenhuma das regras está dando sinal em ${base(par)} no gráfico de ${nomeT}. Ficar de fora também é uma decisão: as regras só entram quando as condições aparecem.</p></div>`;
+  }
+
+  const linhas = S.setups.map(x => { const h = P?.[x.id], n = nv(x.id);
+    const det = x.estado === "posicao" ? `Comprada a ${fP(x.entrada)} · ${pr(x.ret)} · sai abaixo de ${fP(Math.max(x.stop, x.fechaAbaixo || 0))}`
+      : x.estado === "comprar" ? `Entrada ${fP(x.entrada)} · stop ${fP(x.stop0)} · alvo ${fP(x.alvo1)}`
+      : x.estado === "vender" ? `Sair: ${x.motivoSaida}`
+      : x.estado === "armado" && x.gatilho ? `Gatilho: fechar acima de ${fP(x.gatilho)}` : "";
+    const ult = h?.ultimos?.length ? `<details class="mais"><summary>Últimas operações desta regra</summary><ul class="linhas">${h.ultimos.slice().reverse().map(o => `<li>${new Date(o.t).toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year:"2-digit" })}: comprou ${fP(o.ent)}, vendeu ${fP(o.sai)} → <b class="num ${o.ret >= 0 ? "up" : "down"}">${pr(o.ret)}</b> <span class="muted">(${esc(o.motivo)})</span></li>`).join("")}</ul></details>` : "";
+    return `<li><div class="cab"><b>${esc(x.nome)}</b><span><span class="est ${x.estado}">${EST_TXT[x.estado]}</span> ${n ? `<span class="nt ${n}">${NT_TXT[n]}</span>` : ""}</span></div>
+      ${det ? `<div class="num2" style="margin-top:4px">${det}</div>` : ""}
+      <p class="muted">${esc(x.ideia)} ${esc(x.saidaRegra)}</p>
+      ${h?.trades ? `<p>No histórico: <b>${h.trades}</b> operações · acertou <b>${pc(h.acerto)}</b> · média por operação <b class="num ${h.retMedio >= 0 ? "up" : "down"}">${pr(h.retMedio)}</b> · somando tudo <b class="num ${h.composto >= 0 ? "up" : "down"}">${pr(h.composto)}</b> · pior sequência: ${h.perdasSeguidas} perdas seguidas</p>` : ""}
+      ${ult}</li>`; }).join("");
+
+  const pr2 = S.protecao;
+  const prot = `<p class="eyebrow" style="margin:14px 0 4px">Se você já tem ${base(par)}</p>
+    <ul class="linhas">${pr2.stopMovel < S.preco
+      ? `<li>Stop de proteção sugerido: <b class="num">${fP(pr2.stopMovel)}</b> (${pr(pr2.stopMovel / S.preco - 1)}). É a máxima das últimas 22 velas menos 3× a oscilação normal; suba junto se o preço subir, nunca desça.</li>`
+      : `<li>⚠️ O preço já caiu mais de 3× a oscilação normal desde a máxima recente: quem usa stop móvel já teria vendido. Se ainda está comprado, defina agora o quanto aceita perder; um stop abaixo do suporte mais próximo${analises[TF_EST[tf]]?.suportes?.[0] ? ` (<b class="num">${fP(analises[TF_EST[tf]].suportes[0].p)}</b>)` : ""} é o mínimo.</li>`}
+    ${pr2.avisos.map(a => `<li>⚠️ ${esc(a)}</li>`).join("")}</ul>`;
+  const bh = est?.setups;
+  el.innerHTML = `<h2>Pontos de entrada e saída · ${base(par)} ${nomeT}</h2>
+    <p class="small muted" style="margin:-4px 0 10px">Quatro regras fixas de compra e venda (sem alavancagem), aplicadas agora e testadas em todo o histórico de ${base(par)} com 0,15% de custo em cada compra e venda.${tf === "15m" || tf === "1w" ? ` Para ${tf === "15m" ? "15 min" : "semana"} usamos o gráfico de ${nomeT}.` : ""}</p>
+    ${ver}
+    <ul class="regras">${linhas}</ul>
+    ${bh ? `<p class="small muted" style="margin:10px 0 0">Para comparar: comprar e segurar ${base(par)} desde ${new Date(bh.desde).toLocaleDateString("pt-BR", { month:"short", year:"numeric" })} deu <b class="num">${pr(bh.compraESegura)}</b>. As regras ficam fora do mercado boa parte do tempo: ganham menos nas grandes altas, mas evitam boa parte das quedas. Acerto baixo é normal: as perdas são pequenas e poucas operações grandes pagam o resto.</p>` : ""}
+    ${prot}
+    <p class="aviso-leg">Regras automáticas testadas no passado; o passado não garante o futuro. Decisão e risco são seus: nunca arrisque mais do que aceita perder e use sempre o stop.</p>`;
+  const b = $("sLevar");
+  if (b) b.onclick = () => { if (!planoCalc) return; $("cEnt").value = +planoCalc.ent.toPrecision(6); $("cStop").value = +planoCalc.stop.toPrecision(6); $("cAlvo").value = +planoCalc.alvo.toPrecision(6); $("cEnt").dispatchEvent(new Event("input")); $("cardRisco").scrollIntoView({ behavior:"smooth", block:"start" }); };
 }
 
 // ---------- calculadora de risco
@@ -670,7 +785,7 @@ function conectar(){
         G.velasS.update({ time: tempo(v.t), open: v.o, high: v.h, low: v.l, close: v.c });
         G.volS.update({ time: tempo(v.t), value: v.v, color: (v.c >= v.o ? up : dn) + "66" });
       }
-      if (k.x) { analises[tf] = analisar(c); renderAnalise(); }
+      if (k.x) { analises[tf] = analisar(c); renderAnalise(); if (TF_EST[tf] === tf) renderSetups(); }
     }
   };
   ws.onclose = () => { $("dotVivo").classList.remove("on"); $("txtVivo").textContent = "reconectando…"; wsIdx++; clearTimeout(wsTimer); wsTimer = setTimeout(conectar, 3000); };
@@ -713,7 +828,7 @@ $("fecharBusca").onclick = () => $("dlgBusca").close();
 async function abrirTf(){
   try { await carregarVelas(par, tf); } catch (e) { toast(e.message); return; }
   analises[tf] = analisar(velas[`${par}|${tf}`]);
-  desenhar(true); renderAnalise(); conectar(); carregarEstat(); renderRisco();
+  desenhar(true); renderAnalise(); conectar(); carregarEstat(); renderRisco(); renderSetups();
 }
 async function escolher(s){
   par = s; store.set("par", par);
@@ -740,7 +855,7 @@ $("lnkTema").onclick = e => { e.preventDefault(); const n = document.documentEle
 { const t = store.get("tema"); if (t) document.documentElement.dataset.theme = t; }
 
 // ---------- alertas no celular
-const AUTO = [["rsi","IFR em extremo (sobrecompra/sobrevenda)"],["macd","Virada do MACD"],["cruz","Cruzamento das médias 50/200"],["rompe","Rompimento de máxima/mínima"],["volume","Volume muito acima da média"],["movimento","Movimento forte (3% em 1h)"]];
+const AUTO = [["entrada","Sinais de compra e venda (só das regras que funcionaram)"],["rsi","IFR em extremo (sobrecompra/sobrevenda)"],["macd","Virada do MACD"],["cruz","Cruzamento das médias 50/200"],["rompe","Rompimento de máxima/mínima"],["volume","Volume muito acima da média"],["movimento","Movimento forte (3% em 1h)"]];
 function b64(s){ const p = "=".repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); }
 async function inscricao(){ if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
 async function rpc(fn, body){
@@ -748,7 +863,8 @@ async function rpc(fn, body){
   if (!r.ok) throw new Error(await r.text()); const t = await r.text(); return t ? JSON.parse(t) : null;
 }
 let alertas = store.get("alertas", []);   // {id, par, tipo: "acima"|"abaixo", valor}
-let prefs = store.get("prefs", { auto: { rsi:true, macd:false, cruz:true, rompe:true, volume:false, movimento:true }, tfs: ["4h","1d"] });
+let prefs = store.get("prefs", { auto: { entrada:true, rsi:true, macd:false, cruz:true, rompe:true, volume:false, movimento:true }, tfs: ["4h","1d"] });
+if (prefs.auto.entrada === undefined) { prefs.auto.entrada = true; store.set("prefs", prefs); setTimeout(() => salvarServidor().catch(() => {}), 3000); }
 async function salvarServidor(){
   const s = await inscricao(); if (!s) return;
   const j = s.toJSON();

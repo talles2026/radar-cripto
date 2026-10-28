@@ -5,6 +5,7 @@
 // 4) Teste honesto: simula o método no passado (sem olhar o futuro) e mede se ele acerta mais que o acaso.
 // Candles: arrays [t, o, h, l, c, v] já fechados, em ordem.
 import { ema, rsi, macd, atr, sma } from "./analise.js";
+import { placarSetups } from "./setups.js";
 
 export const HORIZONTES = {
   "1h": [[4, "4 horas"], [24, "24 horas"]],
@@ -121,6 +122,8 @@ export function calcular(velas, tf) {
   const [hzT, nomeT] = hzs[1];
   out.teste = testar(P, hzT, nomeT);
   out.placar = placar(P, hzs[1][0], hzs[1][1]);
+  // pontos de entrada e saída: as regras de compra/venda testadas no histórico, com taxas
+  try { out.setups = placarSetups(velas); } catch (_) { out.setups = null; }
   return out;
 }
 
