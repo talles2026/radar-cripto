@@ -50,6 +50,13 @@ h2{font-family:var(--display);font-weight:700;font-size:1.02rem;margin:0 0 10px}
 .moeda b{display:block;font-size:.85rem}
 .moeda .p{font-family:var(--mono);font-size:.85rem}
 .moeda .v{font-family:var(--mono);font-size:.72rem}
+.moeda .sig{display:block;margin-top:6px;text-align:center;font-size:.66rem;font-weight:700;letter-spacing:.04em;padding:3px 0;border-radius:7px;background:var(--soft);color:var(--muted)}
+.sig.comprar{background:var(--up);color:#06130d}.sig.vender{background:var(--down);color:#fff}
+.sig.manter{background:color-mix(in srgb,var(--info) 25%,transparent);color:var(--info)}
+.sig.olho{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.sig.carregando{opacity:.5}
+.lista-leg{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.7rem;color:var(--muted);margin:2px 0 0}
+.lista-leg button{border:0;background:none;color:var(--muted);text-decoration:underline;font-size:.7rem;padding:0}
 .moeda.add{display:grid;place-items:center;min-width:60px;color:var(--muted);font-size:1.4rem}
 
 /* preço */
@@ -229,8 +236,11 @@ footer a{color:inherit}
 
 <div class="wrap"><main>
   <div class="lista" id="lista"></div>
+  <div class="lista-leg" id="listaLeg"></div>
 
   <section class="card" id="cardPreco"><div class="skel"></div></section>
+
+  <section class="card" id="cardSetups"><h2>Pontos de entrada e saída</h2><div class="skel"></div></section>
 
   <section class="card" id="cardComent" hidden></section>
 
@@ -246,8 +256,6 @@ footer a{color:inherit}
   </section>
 
   <section class="card" id="cardAnalise"><h2>Leitura do gráfico</h2><div class="skel"></div></section>
-
-  <section class="card" id="cardSetups"><h2>Pontos de entrada e saída</h2><div class="skel"></div></section>
 
   <section class="card" id="cardProb"><h2>O que o histórico diz</h2><div class="skel"></div></section>
 
@@ -274,7 +282,7 @@ footer a{color:inherit}
 import { analisar, series } from "./analise.js";
 import { situacao } from "./setups.js";
 
-const APP_VERSAO = "5";
+const APP_VERSAO = "6";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -343,7 +351,7 @@ async function carregarTickers(){
 // ---------- lista de moedas
 function renderLista(){
   $("lista").innerHTML = lista.map(s => { const t = tickers[s] || {};
-    return `<button class="moeda ${s === par ? "sel" : ""}" data-s="${s}"><b>${base(s)}</b><div class="p">${fP(t.p)}</div><div class="v ${t.var >= 0 ? "up" : "down"}">${fPct(t.var)}</div></button>`; }).join("")
+    return `<button class="moeda ${s === par ? "sel" : ""}" data-s="${s}"><b>${base(s)}</b><div class="p">${fP(t.p)}</div><div class="v ${t.var >= 0 ? "up" : "down"}">${fPct(t.var)}</div>${seloMoeda(s)}</button>`; }).join("")
     + `<button class="moeda add" id="btnAdd" aria-label="Adicionar moeda">+</button>`;
   $("lista").querySelectorAll("[data-s]").forEach(b => {
     b.onclick = () => escolher(b.dataset.s);
@@ -351,6 +359,9 @@ function renderLista(){
     b.ontouchstart = () => { tm = setTimeout(() => remover(b.dataset.s), 700); }; b.ontouchend = () => clearTimeout(tm);
   });
   $("btnAdd").onclick = abrirBusca;
+  const tl = TF_EST[tf];
+  $("listaLeg").innerHTML = `<span>Sinais das regras no gráfico de <b>${NOME_EST[tl]}</b></span><button id="lnkSinal" type="button">trocar para ${tl === "1d" ? "4 horas" : "diário"}</button>`;
+  $("lnkSinal").onclick = () => { tf = tl === "1d" ? "4h" : "1d"; store.set("tf", tf); renderTfs(); abrirTf(); atualizarSinaisLista(); };
 }
 function remover(s){
   if (lista.length <= 1) return toast("Deixe pelo menos uma moeda.");
@@ -453,7 +464,7 @@ function desenhar(ajustar){
 }
 function renderTfs(){
   $("tfs").innerHTML = TFS.map(([k, n]) => `<button data-tf="${k}" class="${k === tf ? "sel" : ""}">${k === "1d" ? "1D" : k === "1w" ? "1S" : k}</button>`).join("");
-  $("tfs").querySelectorAll("button").forEach(b => b.onclick = () => { tf = b.dataset.tf; store.set("tf", tf); renderTfs(); abrirTf(); });
+  $("tfs").querySelectorAll("button").forEach(b => b.onclick = () => { const ant = TF_EST[tf]; tf = b.dataset.tf; store.set("tf", tf); renderTfs(); abrirTf(); if (TF_EST[tf] !== ant) atualizarSinaisLista(); });
   $("chips").innerHTML = Object.keys(NOMES).map(k => `<button class="chip ${ind[k] ? "on" : ""}" data-k="${k}">${CORES[k] ? `<i style="background:${CORES[k]}"></i>` : ""}${NOMES[k]}</button>`).join("");
   $("chips").querySelectorAll("button").forEach(b => b.onclick = () => { ind[b.dataset.k] = !ind[b.dataset.k]; store.set("ind", ind); renderTfs(); desenhar(false); });
 }
@@ -518,17 +529,22 @@ const NOME_EST = { "1h":"1 hora", "4h":"4 horas", "1d":"diário" };
 const estCache = {};
 const pc = v => v == null ? "–" : Math.round(v * 100) + "%";
 const pr = v => v == null ? "–" : (v > 0 ? "+" : "") + (v * 100).toFixed(1).replace(".", ",") + "%";
+const estPedidos = {};
+function buscarEstat(p, t){
+  const k = p + "|" + t;
+  if (estCache[k] && Date.now() - estCache[k].em < 10 * 60000) return Promise.resolve(estCache[k].d);
+  return estPedidos[k] ||= fetch(`${CONFIG.fn}?acao=estat&par=${p}&tf=${t}`, { signal: AbortSignal.timeout(90000) })
+    .then(r => r.json()).then(d => { if (d.erro) throw new Error(d.erro); estCache[k] = { em: Date.now(), d }; return d; })
+    .finally(() => { delete estPedidos[k]; });
+}
 async function carregarEstat(){
   const t = TF_EST[tf], k = par + "|" + t;
   const el = $("cardProb");
   if (estCache[k] && Date.now() - estCache[k].em < 10 * 60000) return renderEstat(estCache[k].d, t);
   el.innerHTML = `<h2>O que o histórico diz</h2><p class="small muted">Calculando com anos de candles de ${base(par)}… na primeira vez pode levar até 30 segundos.</p><div class="skel" style="height:80px"></div>`;
   try {
-    const r = await fetch(`${CONFIG.fn}?acao=estat&par=${par}&tf=${t}`, { signal: AbortSignal.timeout(90000) });
-    const d = await r.json();
-    if (d.erro) throw new Error(d.erro);
-    estCache[k] = { em: Date.now(), d };
-    if (TF_EST[tf] === t && d.par === par) { renderEstat(d, t); renderSetups(); }
+    const p0 = par, d = await buscarEstat(p0, t);
+    if (TF_EST[tf] === t && p0 === par) { renderEstat(d, t); renderSetups(); }
   } catch (e) { el.innerHTML = `<h2>O que o histórico diz</h2><p class="small muted">Não foi possível calcular agora (${esc(e.message)}). Moedas muito novas não têm histórico suficiente.</p>`; }
 }
 function renderEstat(d, t){
@@ -589,6 +605,47 @@ function renderEstat(d, t){
 const EST_TXT = { comprar:"COMPRAR", vender:"VENDER", posicao:"Comprado", armado:"De olho", fora:"Sem sinal" };
 const NT_TXT = { bom:"funcionou", medio:"lucro pequeno", ruim:"não funcionou", pouco:"poucos casos" };
 let planoCalc = null;
+// mesma decisão para o card e para os selos da lista: regras com histórico ruim não contam
+function decidir(S, P){
+  const nv = id => P?.[id]?.nota?.nivel || null;
+  const ordem = { bom:0, medio:1, pouco:2, ruim:3, null:2 };
+  const porNota = arr => [...arr].sort((a, b) => ordem[nv(a.id)] - ordem[nv(b.id)]);
+  const ok = x => nv(x.id) !== "ruim";
+  const vend = porNota(S.setups.filter(x => x.estado === "vender" && ok(x)))[0];
+  const comp = porNota(S.setups.filter(x => x.estado === "comprar" && ok(x)))[0];
+  const pos = porNota(S.setups.filter(x => x.estado === "posicao" && ok(x)))[0];
+  const olho = porNota(S.setups.filter(x => x.estado === "armado" && ok(x)))[0];
+  const tipo = comp ? "comprar" : vend ? "vender" : pos ? "manter" : olho ? "olho" : "aguardar";
+  return { vend, comp, pos, olho, tipo };
+}
+// selos da lista de moedas
+const sinais = {};          // par -> { tipo, t }
+const SIG_TXT = { comprar:"COMPRAR", vender:"VENDER", manter:"MANTER", olho:"DE OLHO", aguardar:"AGUARDAR" };
+function seloMoeda(s){
+  const x = sinais[s];
+  if (!x || x.t !== TF_EST[tf]) return `<span class="sig carregando">…</span>`;
+  return `<span class="sig ${x.tipo}">${SIG_TXT[x.tipo]}</span>`;
+}
+function renderSelos(){
+  document.querySelectorAll(".moeda[data-s]").forEach(b => { const el = b.querySelector(".sig"); if (el) el.outerHTML = seloMoeda(b.dataset.s); });
+}
+let sinaisRodando = false;
+async function atualizarSinaisLista(){
+  if (sinaisRodando) return; sinaisRodando = true;
+  try {
+    const t = TF_EST[tf];
+    for (const s of [...lista]) {
+      try {
+        const c = (s === par && velas[`${s}|${t}`]) || await carregarVelas(s, t);
+        const S = situacao(c); if (!S) { sinais[s] = { tipo: "aguardar", t }; continue; }
+        sinais[s] = { tipo: decidir(S, estCache[s + "|" + t]?.d?.setups?.setups || null).tipo, t };
+        renderSelos();
+        // placar do histórico em segundo plano: tira do selo as regras que não funcionaram nesta moeda
+        if (!estCache[s + "|" + t]) buscarEstat(s, t).then(d => { const S2 = situacao(velas[`${s}|${t}`] || c); if (S2 && TF_EST[tf] === t) { sinais[s] = { tipo: decidir(S2, d?.setups?.setups || null).tipo, t }; renderSelos(); } }).catch(() => {});
+      } catch (e) {}
+    }
+  } finally { sinaisRodando = false; }
+}
 function renderSetups(){
   const el = $("cardSetups"); const t = TF_EST[tf];
   const c = velas[`${par}|${t}`];
@@ -601,15 +658,11 @@ function renderSetups(){
   const nv = id => P?.[id]?.nota?.nivel || null;
   const confiavel = x => ["bom","medio"].includes(nv(x.id));
   const brl = v => /USDT$|FDUSD$|USDC$/.test(par) && usdBrl ? ` <span class="muted small">(${fBRL(v * usdBrl)})</span>` : "";
-  const ordem = { bom:0, medio:1, pouco:2, ruim:3, null:2 };
-  const porNota = arr => [...arr].sort((a, b) => ordem[nv(a.id)] - ordem[nv(b.id)]);
   const hist = x => { const h = P?.[x.id]; return h?.trades ? `${h.trades} operações, acerto de ${pc(h.acerto)}, média de ${pr(h.retMedio)} por operação` : ""; };
 
   // veredito: o que fazer agora
-  const vend = porNota(S.setups.filter(x => x.estado === "vender"))[0];
-  const comp = porNota(S.setups.filter(x => x.estado === "comprar" && nv(x.id) !== "ruim"))[0];
-  const pos = porNota(S.setups.filter(x => x.estado === "posicao" && nv(x.id) !== "ruim"))[0];
-  const olho = porNota(S.setups.filter(x => x.estado === "armado" && nv(x.id) !== "ruim"))[0];
+  const { vend, comp, pos, olho, tipo } = decidir(S, P);
+  sinais[par] = { tipo, t }; renderSelos();
   let ver = "";
   planoCalc = null;
   if (comp) {
@@ -819,7 +872,7 @@ function filtrar(){
   const q = $("qPar").value.trim().toUpperCase();
   const r = todos.filter(x => !q || x.symbol.startsWith(q) || base(x.symbol).includes(q)).slice(0, 40);
   $("resPar").innerHTML = r.map(x => `<li><button data-s="${x.symbol}"><span><b>${base(x.symbol)}</b> <span class="muted small">/ ${x.symbol.slice(base(x.symbol).length)}</span></span><span class="num small">${lista.includes(x.symbol) ? "✓ na lista" : fP(+x.lastPrice)}</span></button></li>`).join("") || `<li class="muted small">Nada encontrado.</li>`;
-  $("resPar").querySelectorAll("button").forEach(b => b.onclick = () => { const s = b.dataset.s; if (!lista.includes(s)) { lista.push(s); store.set("lista", lista); } $("dlgBusca").close(); escolher(s); });
+  $("resPar").querySelectorAll("button").forEach(b => b.onclick = () => { const s = b.dataset.s; if (!lista.includes(s)) { lista.push(s); store.set("lista", lista); } $("dlgBusca").close(); escolher(s).then(atualizarSinaisLista); });
 }
 $("qPar").oninput = filtrar;
 $("fecharBusca").onclick = () => $("dlgBusca").close();
@@ -828,7 +881,7 @@ $("fecharBusca").onclick = () => $("dlgBusca").close();
 async function abrirTf(){
   try { await carregarVelas(par, tf); } catch (e) { toast(e.message); return; }
   analises[tf] = analisar(velas[`${par}|${tf}`]);
-  desenhar(true); renderAnalise(); conectar(); carregarEstat(); renderRisco(); renderSetups();
+  desenhar(true); renderAnalise(); conectar(); carregarEstat(); renderRisco(); renderSetups(); renderLista();
 }
 async function escolher(s){
   par = s; store.set("par", par);
@@ -849,6 +902,7 @@ async function iniciar(){
   renderAnalise();
   setInterval(() => carregarTickers().then(() => { renderLista(); renderPreco(); }).catch(() => {}), 60000);
   setInterval(() => analisarTudo(), 5 * 60000);
+  atualizarSinaisLista(); setInterval(atualizarSinaisLista, 5 * 60000);
 }
 $("btnAtualizar").onclick = () => { for (const k of Object.keys(velas)) delete velas[k]; escolher(par); };
 $("lnkTema").onclick = e => { e.preventDefault(); const n = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = n; store.set("tema", n); criarGraficos(); desenhar(true); };
