@@ -282,7 +282,7 @@ footer a{color:inherit}
 import { analisar, series } from "./analise.js";
 import { situacao } from "./setups.js";
 
-const APP_VERSAO = "6";
+const APP_VERSAO = "7";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -709,7 +709,8 @@ function renderSetups(){
     ${pr2.avisos.map(a => `<li>⚠️ ${esc(a)}</li>`).join("")}</ul>`;
   const bh = est?.setups;
   el.innerHTML = `<h2>Pontos de entrada e saída · ${base(par)} ${nomeT}</h2>
-    <p class="small muted" style="margin:-4px 0 10px">Quatro regras fixas de compra e venda (sem alavancagem), aplicadas agora e testadas em todo o histórico de ${base(par)} com 0,15% de custo em cada compra e venda.${tf === "15m" || tf === "1w" ? ` Para ${tf === "15m" ? "15 min" : "semana"} usamos o gráfico de ${nomeT}.` : ""}</p>
+    <p class="small muted" style="margin:-4px 0 10px">Quatro regras fixas de compra e venda (sem alavancagem), aplicadas agora e testadas em todo o histórico de ${base(par)} com 0,15% de custo em cada compra e venda.${tf === "1w" ? ` Para a semana usamos o gráfico de ${nomeT}.` : ""}</p>
+    ${tf === "15m" || t === "1h" ? `<div class="nota ruim" style="margin:0 0 12px"><b>Day trade:</b> testamos estas regras em 15 minutos com 18 meses de BTC e ETH (52 mil velas cada) e nenhuma deu lucro, nem com taxa reduzida (0,1% ou 0,05%). Nesse prazo o stop fica tão perto que a taxa sozinha come boa parte do risco de cada operação. Em 1 hora quase todas também perderam. ${tf === "15m" ? "Por isso não há sinal próprio de 15 minutos: aqui aparecem os de 1 hora. " : ""}Os sinais mais confiáveis estão no <b>diário</b>.</div>` : ""}
     ${ver}
     <ul class="regras">${linhas}</ul>
     ${bh ? `<p class="small muted" style="margin:10px 0 0">Para comparar: comprar e segurar ${base(par)} desde ${new Date(bh.desde).toLocaleDateString("pt-BR", { month:"short", year:"numeric" })} deu <b class="num">${pr(bh.compraESegura)}</b>. As regras ficam fora do mercado boa parte do tempo: ganham menos nas grandes altas, mas evitam boa parte das quedas. Acerto baixo é normal: as perdas são pequenas e poucas operações grandes pagam o resto.</p>` : ""}
