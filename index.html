@@ -138,6 +138,15 @@ table.mtf{width:100%;border-collapse:collapse;font-size:.82rem}
 .selo2 .ic{font-size:1.2rem;line-height:1}
 .placar td.v{font-family:var(--mono)}
 details.mais summary{cursor:pointer;color:var(--muted);font-size:.84rem;margin-top:10px}
+/* comentário do dia dobrável */
+.dobra{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dobra h2{margin:0;flex:1}
+.dobra .data{display:block;font-family:var(--body,inherit);font-weight:400;font-size:.78rem;color:var(--muted);margin-top:2px}
+.dobra .seta{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--muted);transition:transform .2s}
+#cardComent.aberto .dobra .seta{transform:rotate(180deg)}
+.dobra:focus-visible{outline:2px solid var(--line);outline-offset:4px;border-radius:10px}
+.coment-corpo{margin-top:10px}
+#cardComent:not(.aberto) .coment-corpo{display:none}
 /* calculadora */
 .calc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .calc label{font-size:.74rem;color:var(--muted);display:grid;gap:3px}
@@ -233,7 +242,7 @@ footer a{color:inherit}
 <script type="module">
 import { analisar, series } from "./analise.js";
 
-const APP_VERSAO = "3";
+const APP_VERSAO = "4";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -598,9 +607,16 @@ async function carregarComentario(){
     const c = await (await fetch("comentario.json?t=" + Date.now(), { cache:"no-store" })).json();
     if (!c?.texto || Date.now() - Date.parse(c.data) > 40 * 3600e3) return;
     const el = $("cardComent"); el.hidden = false;
-    el.innerHTML = `<h2>${esc(c.titulo || "Comentário do dia")}</h2><p class="small muted" style="margin:-4px 0 8px">${new Date(c.data).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })}</p>
-      <p>${esc(c.texto)}</p>${c.pontos?.length ? `<ul>${c.pontos.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
-      ${c.fontes?.length ? `<p class="small muted">Fontes: ${c.fontes.map(f => `<a href="${esc(f.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(f.nome)}</a>`).join(" · ")}</p>` : ""}`;
+    const aberto = store.get("comentAberto", false);
+    el.classList.toggle("aberto", aberto);
+    el.innerHTML = `<button class="dobra" type="button" aria-expanded="${aberto}" aria-controls="comentCorpo"><h2>${esc(c.titulo || "Comentário do dia")}<span class="data">${new Date(c.data).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })}</span></h2><span class="seta" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></button>
+      <div class="coment-corpo" id="comentCorpo"><p>${esc(c.texto)}</p>${c.pontos?.length ? `<ul>${c.pontos.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
+      ${c.fontes?.length ? `<p class="small muted">Fontes: ${c.fontes.map(f => `<a href="${esc(f.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(f.nome)}</a>`).join(" · ")}</p>` : ""}</div>`;
+    el.querySelector(".dobra").onclick = () => {
+      const ab = el.classList.toggle("aberto");
+      el.querySelector(".dobra").setAttribute("aria-expanded", ab);
+      store.set("comentAberto", ab);
+    };
   } catch (e) {}
 }
 
