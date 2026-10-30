@@ -185,7 +185,7 @@ export function situacao(candles) {
   const I = indicadores(c), n = c.length, i = n - 1, A = I.a[i];
   const lista = [];
   for (const S of SETUPS) {
-    const { aberto } = simular(I, S.id, Math.max(210, n - 400));
+    const { aberto, trades } = simular(I, S.id, Math.max(210, n - 400));
     const s = sinal(I, S.id, i);
     let estado = "fora", d = {};
     if (aberto) {
@@ -208,7 +208,10 @@ export function situacao(candles) {
       d.riscoPct = risco / d.entrada;
     }
     const txt = estado === "comprar" && aberto ? (sinal(I, S.id, aberto.iS)?.txt ?? "") : (s?.txt ?? "");
-    lista.push({ id: S.id, nome: S.nome, ideia: S.ideia, saidaRegra: S.saida, estado, txt, ...d });
+    // operação da regra que acabou de ser encerrada (stop batido na última vela fechada)
+    const u = trades.at(-1);
+    const ultimaSaida = !aberto && u && u.iX === i ? { desde: u.t, entrada: u.entrada, saida: u.saida, motivo: u.motivo, ret: u.ret } : null;
+    lista.push({ id: S.id, nome: S.nome, ideia: S.ideia, saidaRegra: S.saida, estado, txt, ultimaSaida, ...d });
   }
   // proteção para quem já está comprado, independente de setup
   const topo22 = maxH(c, i - 21, i);

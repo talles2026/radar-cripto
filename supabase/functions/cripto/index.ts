@@ -1,12 +1,11 @@
 // Radar Cripto — robô de alertas. Roda a cada 2 minutos (pg_cron):
 //  - alertas de preço de cada celular (dispara uma vez e apaga o alerta)
-//  - a cada 15 minutos, sinais do gráfico nas moedas da lista de cada celular
+//  - a cada 15 minutos, momentos de COMPRA e de VENDA nas moedas da lista de cada celular
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import webpush from "npm:web-push@3.6.7";
-import { analisar } from "./analise.js";
 import { calcular } from "./probabilidades.js";
 import { filtrarUniverso, medir, montar } from "./scanner.js";
-import { situacao } from "./setups.js";
+import { situacao, indicadores } from "./setups.js";
 
 const SITE = "https://talles2026.github.io/radar-cripto/";
 const APIS = ["https://api.binance.com", "https://data-api.binance.vision", "https://api1.binance.com", "https://api2.binance.com"];
@@ -48,6 +47,18 @@ async function enviar(s: J, payload: J) {
   }
 }
 
+
+// Venda para quem já tem a moeda: só na vela que CRUZOU (avisa uma vez, não toda vela)
+function protecao(candles: J[]) {
+  const c = candles.slice(0, -1), I = indicadores(c), i = c.length - 1;
+  const r = I.r, e = I.e200;
+  if (r[i] == null || r[i - 1] == null || e[i] == null || e[i - 1] == null) return null;
+  return {
+    vela: c[i].t, rsi: r[i], e200: e[i],
+    lucro: r[i - 1] < 75 && r[i] >= 75,
+    baixa: c[i - 1].c >= e[i - 1] && c[i].c < e[i],
+  };
+}
 
 // ---------------------------------------------------------------- histórico e probabilidades
 const LIMITE: J = { "1h": 20000, "4h": 13000, "1d": 4000 };
@@ -148,67 +159,82 @@ async function rodar() {
     if (restantes.length !== s.alertas.length) await db.from("cripto_inscricoes").update({ alertas: restantes }).eq("endpoint", s.endpoint);
   }
 
-  // 2) sinais do gráfico (a cada 15 minutos)
+  // 2) momentos de COMPRA e de VENDA nas moedas da lista (a cada 15 minutos)
   const min = new Date().getUTCMinutes();
   let sinais = 0;
   if (min % 15 < 2) {
-    const quer = (s: J, k: string) => (s.prefs?.auto ?? {})[k] === true;
+    // preferências novas: compra / venda (quem tinha só "entrada" continua recebendo os dois)
+    const quer = (s: J, k: "compra" | "venda") => { const a = s.prefs?.auto ?? {}; return (a[k] ?? a.entrada ?? true) === true; };
     const tfsDe = (s: J) => (Array.isArray(s.prefs?.tfs) ? s.prefs.tfs : ["4h", "1d"]).filter((t: string) => ["1h", "4h", "1d"].includes(t));
+    const ativos = subs.filter((s: J) => quer(s, "compra") || quer(s, "venda"));
     const pedidos = new Set<string>();
-    for (const s of subs) for (const p of (s.pares ?? []).slice(0, 15)) for (const t of tfsDe(s)) pedidos.add(`${p}|${t}`);
-    const precisaMov = subs.some((s: J) => quer(s, "movimento"));
-    if (precisaMov) for (const s of subs) for (const p of (s.pares ?? []).slice(0, 15)) pedidos.add(`${p}|1h`);
-    const leituras: Record<string, J | null> = {};
+    for (const s of ativos) for (const p of (s.pares ?? []).slice(0, 15)) for (const t of tfsDe(s)) pedidos.add(`${p}|${t}`);
+
+    // placar das regras: só avisa das que funcionaram naquela moeda/tempo
+    const placares: Record<string, J | null> = {};
+    const { data: est } = await db.from("cripto_estat").select("par,tf,notas:dados->setups->setups").neq("tf", "scan");
+    for (const e of est ?? []) placares[`${e.par}|${e.tf}`] = (e as J).notas ?? null;
+    // moeda/tempo ainda sem placar: calcula um por rodada (o primeiro cálculo é pesado)
     const t0 = Date.now();
     for (const chave of pedidos) {
-      if (Date.now() - t0 > 80e3) break;
+      if (placares[chave]) continue;
+      const [p, t] = chave.split("|");
+      try { const r: J = await estatisticas(p, t); placares[chave] = r?.setups?.setups ?? null; } catch (_) { /* tenta na próxima */ }
+      break;
+    }
+
+    const leituras: Record<string, J | null> = {};
+    for (const chave of pedidos) {
+      if (Date.now() - t0 > 100e3) break;
       const [p, t] = chave.split("|");
       try {
         const k = await binance(`/api/v3/klines?symbol=${p}&interval=${t}&limit=600`);
         const c = (k ?? []).map((x: any[]) => ({ t: x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5] }));
-        const a = analisar(c);
-        if (a && t === "1h" && c.length > 2) { const f = c[c.length - 2]; (a as J).mov1h = (f.c / f.o - 1) * 100; }
-        if (a) { try { (a as J).sit = situacao(c); } catch (_) { /* sem situação */ } }
-        leituras[chave] = a;
+        leituras[chave] = c.length >= 260 ? { sit: situacao(c), prot: protecao(c) } : null;
       } catch (_) { leituras[chave] = null; }
     }
-    // placar das regras (do cache de estatísticas) para só avisar das que funcionaram
-    const placares: Record<string, J | null> = {};
-    if (subs.some((s: J) => quer(s, "entrada"))) {
-      const { data: est } = await db.from("cripto_estat").select("par,tf,notas:dados->setups->setups").neq("tf", "scan");
-      for (const e of est ?? []) placares[`${e.par}|${e.tf}`] = (e as J).notas ?? null;
-    }
-    for (const s of subs) {
+
+    const pct = (x: number) => `${x >= 0 ? "+" : ""}${(x * 100).toFixed(1).replace(".", ",")}%`;
+    for (const s of ativos) {
       const fila: J[] = [];
       for (const p of (s.pares ?? []).slice(0, 15)) {
         for (const t of tfsDe(s)) {
-          const a = leituras[`${p}|${t}`]; if (!a) continue;
-          const id = `${p}:${t}:${a.ultimoFechado}`, nome = `${base(p)} (${NOME_TF[t]})`;
-          if (quer(s, "rsi") && a.rsiZona === "alto") fila.push({ chave: `rsi:${id}`, title: `${nome}: IFR em ${a.rsi.toFixed(0)}`, body: `Sobrecomprado: risco maior de correção. Preço ${fP(a.preco)}.` });
-          if (quer(s, "rsi") && a.rsiZona === "baixo") fila.push({ chave: `rsi:${id}`, title: `${nome}: IFR em ${a.rsi.toFixed(0)}`, body: `Sobrevendido: chance maior de repique. Preço ${fP(a.preco)}.` });
-          if (quer(s, "macd") && a.macdCruz) fila.push({ chave: `macd:${id}`, title: `${nome}: MACD virou para ${a.macdCruz === "alta" ? "cima" : "baixo"}`, body: `Possível começo de movimento de ${a.macdCruz}. Preço ${fP(a.preco)}.` });
-          if (quer(s, "cruz") && a.cruz) fila.push({ chave: `cruz:${p}:${t}:${a.cruz}`, title: `${nome}: cruzamento de ${a.cruz} das médias 50/200`, body: a.cruz === "alta" ? "Média de 50 passou acima da de 200 (cruz dourada)." : "Média de 50 caiu abaixo da de 200 (cruz da morte)." });
-          if (quer(s, "rompe") && a.rompe) fila.push({ chave: `rompe:${id}`, title: `${nome}: ${a.rompe === "alta" ? "rompeu a máxima" : "perdeu a mínima"} de 20 velas`, body: `Preço ${fP(a.preco)}. Confira o volume para ver se o movimento tem força.` });
-          if (quer(s, "volume") && a.volForte) fila.push({ chave: `vol:${id}`, title: `${nome}: volume muito acima da média`, body: `Movimento com força no último candle. Preço ${fP(a.preco)}.` });
-        }
-        for (const t of tfsDe(s)) {
-          const a = leituras[`${p}|${t}`]; if (!a?.sit || !quer(s, "entrada")) continue;
+          const L = leituras[`${p}|${t}`]; if (!L?.sit) continue;
           const notas = placares[`${p}|${t}`];
-          for (const x of a.sit.setups) {
-            const nv = notas?.[x.id]?.nota?.nivel;
-            if (nv !== "bom" && nv !== "medio") continue;   // só regras que funcionaram nesta moeda/tempo
-            const nome = `${base(p)} (${NOME_TF[t]})`;
-            if (x.estado === "comprar") fila.push({ chave: `ent:${p}:${t}:${x.id}:${x.desde}`, title: `${nome}: sinal de compra · ${x.nome}`, body: `Entrada ~${fP(x.entrada)}, stop ${fP(x.stop0)}, alvo ${fP(x.alvo1)}. No histórico: ${Math.round(notas[x.id].acerto * 100)}% de acerto em ${notas[x.id].trades} operações.` });
-            if (x.estado === "vender") fila.push({ chave: `sai:${p}:${t}:${x.id}:${x.desde}`, title: `${nome}: sinal de venda · ${x.nome}`, body: `Regra de saída: ${x.motivoSaida}. Comprado pela regra a ${fP(x.entrada)}; agora ${fP(a.preco)}.` });
+          const nome = base(p), prazo = NOME_TF[t], preco = L.sit.preco;
+          for (const x of L.sit.setups) {
+            const nt = notas?.[x.id];
+            if (nt?.nota?.nivel !== "bom" && nt?.nota?.nivel !== "medio") continue;   // regra não funcionou aqui: ignora
+            const hist = `No histórico desta moeda: acertou ${Math.round(nt.acerto * 100)}% em ${nt.trades} operações.`;
+            if (quer(s, "compra") && x.estado === "comprar")
+              fila.push({ pri: 1, chave: `ent:${p}:${t}:${x.id}:${x.desde}`, title: `🟢 Hora de COMPRAR ${nome} (${prazo})`,
+                body: `${x.nome}. Compra ~${fP(x.entrada)}, stop ${fP(x.stop0)}, alvo ${fP(x.alvo1)}. ${hist}` });
+            if (quer(s, "venda") && x.estado === "vender")
+              fila.push({ pri: 0, chave: `sai:${p}:${t}:${x.id}:${x.desde}`, title: `🔴 Hora de VENDER ${nome} (${prazo})`,
+                body: `${x.nome}: ${x.motivoSaida}. Comprado pela regra a ${fP(x.entrada)}; agora ${fP(preco)} (${pct(preco / x.entrada - 1)}).` });
+            if (quer(s, "venda") && x.estado === "posicao" && preco <= x.stop)
+              fila.push({ pri: 0, chave: `stop:${p}:${t}:${x.id}:${x.desde}`, title: `🔴 VENDER ${nome}: chegou no stop (${prazo})`,
+                body: `${x.nome}. Stop ${fP(x.stop)}, preço agora ${fP(preco)}. Comprado pela regra a ${fP(x.entrada)} (${pct(preco / x.entrada - 1)}).` });
+            if (quer(s, "venda") && x.ultimaSaida && /stop/.test(x.ultimaSaida.motivo))
+              fila.push({ pri: 0, chave: `stop:${p}:${t}:${x.id}:${x.ultimaSaida.desde}`, title: `🔴 VENDER ${nome}: bateu o ${x.ultimaSaida.motivo} (${prazo})`,
+                body: `${x.nome}. Saída a ${fP(x.ultimaSaida.saida)}, comprado a ${fP(x.ultimaSaida.entrada)} (${pct(x.ultimaSaida.ret)}).` });
+          }
+          // para quem já tem a moeda, mesmo sem ter comprado pelas regras (só 4 horas e diário)
+          if (quer(s, "venda") && t !== "1h" && L.prot) {
+            const P = L.prot;
+            if (P.lucro) fila.push({ pri: 2, chave: `luc:${p}:${t}:${P.vela}`, title: `🟠 Hora de REALIZAR LUCRO em ${nome} (${prazo})`,
+              body: `IFR passou de 75 (${P.rsi.toFixed(0)}): subida esticada. Vender uma parte protege o ganho. Preço ${fP(preco)}.` });
+            if (P.baixa) fila.push({ pri: 2, chave: `baixa:${p}:${t}:${P.vela}`, title: `🔴 ${nome} virou para BAIXA (${prazo})`,
+              body: `Fechou abaixo da média de 200 (${fP(P.e200)}). Para quem tem a moeda: hora de vender ou usar stop curto. Preço ${fP(preco)}.` });
           }
         }
-        const h = leituras[`${p}|1h`];
-        if (quer(s, "movimento") && h?.mov1h != null && Math.abs(h.mov1h) >= 3) fila.push({ chave: `mov:${p}:${h.ultimoFechado}`, title: `${base(p)} ${h.mov1h > 0 ? "subiu" : "caiu"} ${Math.abs(h.mov1h).toFixed(1).replace(".", ",")}% em 1 hora`, body: `Preço ${fP(h.preco)}.` });
       }
       if (!fila.length) continue;
       const { data: ja } = await db.from("cripto_enviados").select("chave").eq("endpoint", s.endpoint).in("chave", fila.map(f => f.chave));
       const jaSet = new Set((ja ?? []).map((x: J) => x.chave));
-      for (const f of fila.filter(f => !jaSet.has(f.chave)).slice(0, 4)) {
+      const vistos = new Set<string>();
+      const novos = fila.filter(f => !jaSet.has(f.chave) && !vistos.has(f.chave) && (vistos.add(f.chave), true)).sort((a, b) => a.pri - b.pri);
+      for (const f of novos.slice(0, 4)) {
         const par = f.chave.split(":")[1];
         if (await enviar(s, { title: f.title, body: f.body, tag: f.chave, url: `${SITE}?par=${par}` })) {
           sinais++; await db.from("cripto_enviados").upsert({ endpoint: s.endpoint, chave: f.chave });

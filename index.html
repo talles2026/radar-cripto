@@ -287,7 +287,7 @@ footer a{color:inherit}
 import { analisar, series } from "./analise.js";
 import { situacao } from "./setups.js";
 
-const APP_VERSAO = "9";
+const APP_VERSAO = "10";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -915,7 +915,7 @@ $("lnkTema").onclick = e => { e.preventDefault(); const n = document.documentEle
 { const t = store.get("tema"); if (t) document.documentElement.dataset.theme = t; }
 
 // ---------- alertas no celular
-const AUTO = [["entrada","Sinais de compra e venda (só das regras que funcionaram)"],["rsi","IFR em extremo (sobrecompra/sobrevenda)"],["macd","Virada do MACD"],["cruz","Cruzamento das médias 50/200"],["rompe","Rompimento de máxima/mínima"],["volume","Volume muito acima da média"],["movimento","Movimento forte (3% em 1h)"]];
+const AUTO = [["compra","🟢 Hora de comprar"],["venda","🔴 Hora de vender (saída da regra, stop, realizar lucro, virada para baixa)"]];
 function b64(s){ const p = "=".repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); }
 async function inscricao(){ if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
 async function rpc(fn, body){
@@ -923,8 +923,9 @@ async function rpc(fn, body){
   if (!r.ok) throw new Error(await r.text()); const t = await r.text(); return t ? JSON.parse(t) : null;
 }
 let alertas = store.get("alertas", []);   // {id, par, tipo: "acima"|"abaixo", valor}
-let prefs = store.get("prefs", { auto: { entrada:true, rsi:true, macd:false, cruz:true, rompe:true, volume:false, movimento:true }, tfs: ["4h","1d"] });
-if (prefs.auto.entrada === undefined) { prefs.auto.entrada = true; store.set("prefs", prefs); setTimeout(() => salvarServidor().catch(() => {}), 3000); }
+let prefs = store.get("prefs", { auto: { compra:true, venda:true }, tfs: ["4h","1d"] });
+// versão antiga tinha vários sinais técnicos; agora só compra e venda
+if (prefs.auto.compra === undefined) { const e = prefs.auto.entrada !== false; prefs.auto = { compra: e, venda: e }; store.set("prefs", prefs); setTimeout(() => salvarServidor().catch(() => {}), 3000); }
 async function salvarServidor(){
   const s = await inscricao(); if (!s) return;
   const j = s.toJSON();
@@ -942,7 +943,7 @@ async function renderAlertas(){
   const sub = await inscricao().catch(() => null);
   const t = tickers[par];
   if (!sub) {
-    el.innerHTML = `<p class="small" style="margin:0 0 10px">Receba aviso quando o preço chegar onde você quer, e quando o gráfico mostrar um sinal importante nas moedas da sua lista. Chega mesmo com o app fechado.</p><button class="btn" id="aLigar">🔔 Ligar alertas</button>`;
+    el.innerHTML = `<p class="small" style="margin:0 0 10px">Receba aviso da hora de comprar e da hora de vender as moedas da sua lista, e quando o preço chegar onde você quer. Chega mesmo com o app fechado.</p><button class="btn" id="aLigar">🔔 Ligar alertas</button>`;
     $("aLigar").onclick = async () => {
       try {
         if (await Notification.requestPermission() !== "granted") return toast("Permissão negada. Libere as notificações nas configurações.");
@@ -959,7 +960,7 @@ async function renderAlertas(){
     <div class="form"><select id="aTipo"><option value="acima">Subir acima de</option><option value="abaixo">Cair abaixo de</option></select>
       <input id="aValor" type="number" inputmode="decimal" step="any" placeholder="${t ? fP(t.p).replace(/\./g, "").replace(",", ".") : "preço"}"><button class="btn" id="aAdd">Criar</button></div>
     <ul class="alertas-lista">${alertas.map(a => `<li><span><b>${base(a.par)}</b> ${a.tipo === "acima" ? "subir acima de" : "cair abaixo de"} <b class="num">${fP(a.valor)}</b></span><button data-id="${a.id}" aria-label="Apagar">✕</button></li>`).join("") || `<li class="muted">Nenhum alerta de preço criado.</li>`}</ul>
-    <p class="eyebrow" style="margin:14px 0 0">Sinais automáticos nas moedas da lista</p>
+    <p class="eyebrow" style="margin:14px 0 0">Avisos de compra e venda nas moedas da lista</p><p class="small muted" style="margin:4px 0 0">Só das regras que deram lucro no histórico de cada moeda. Ferramenta de apoio, não é recomendação.</p>
     <div class="prefs">${AUTO.map(([k, n]) => `<label><input type="checkbox" data-a="${k}" ${prefs.auto[k] ? "checked" : ""}>${n}</label>`).join("")}</div>
     <p class="eyebrow" style="margin:6px 0 0">Nos tempos gráficos</p>
     <div class="prefs">${[["1h","1 hora"],["4h","4 horas"],["1d","Diário"]].map(([k, n]) => `<label><input type="checkbox" data-t="${k}" ${prefs.tfs.includes(k) ? "checked" : ""}>${n}</label>`).join("")}</div>
