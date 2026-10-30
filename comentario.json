@@ -1,34 +1,30 @@
 {
- "data": "2026-10-29T10:45:00Z",
- "titulo": "BTC perto de US$ 80 mil após Fed manter juros",
- "texto": "O bitcoin recuou cerca de 1,7% nas últimas 24 horas e era negociado perto de US$ 79,8 mil na madrugada (UTC), com o ether perto de US$ 2,3 mil, depois que o Fed manteve os juros entre 3,75% e 4% em votação de 10 a 2, com os dois votos contrários pedindo alta. O recado de que a inflação segue elevada deixou o mercado com medo de uma alta de juros em dezembro, e o índice de medo e ganância caiu para 51 (neutro), contra 73 há um mês. Mesmo assim, os ETFs de bitcoin nos EUA tiveram o terceiro dia seguido de entrada (US$ 137 milhões em 28/10), enquanto os de ether tiveram o terceiro dia de saída (US$ 21 milhões). A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-10-30T10:45:00Z",
+ "titulo": "Ataque à Binance derruba BTC para perto de US$ 78 mil",
+ "texto": "Na noite de quinta (29/10), uma carteira quente da Binance foi atacada e cerca de US$ 6,3 bilhões foram desviados; a Binance diz que vai cobrir todas as perdas dos clientes com o fundo SAFU e recursos próprios, e parceiros já congelaram cerca de US$ 3 bilhões. Com o susto, o bitcoin caiu até US$ 76,4 mil (menor nível desde 18/09) e era negociado perto de US$ 78,2 mil na manhã de sexta, com ether, solana e XRP caindo mais que o BTC e cerca de US$ 1,5 bilhão em posições alavancadas liquidadas em 24 horas. O índice de medo e ganância despencou de 51 para 30 (medo), num mercado que já vinha pressionado pela inflação PCE de 3,6% nos EUA e pelo receio de alta de juros em dezembro. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Hoje (29/10): PIB do 3º trimestre, inflação PCE de setembro e pedidos de seguro-desemprego nos EUA; inflação acima do esperado reforça o medo de alta de juros.",
-  "Sexta (30/10), 08h UTC: vencimento de cerca de US$ 12 bilhões em opções de bitcoin; o 'max pain' citado é US$ 79 mil, perto do preço atual.",
-  "Níveis citados por analistas: suporte perto de US$ 78 mil e resistência perto de US$ 81,8 mil no BTC.",
-  "Fluxo dos ETFs: veja se a sequência de entradas no bitcoin continua e se as saídas no ether param.",
-  "Próxima reunião do Fed: 8 e 9 de dezembro, com novas projeções de juros."
+  "Binance: acompanhe os avisos oficiais sobre saques por rede/token, o relatório técnico prometido e a nova prova de reservas.",
+  "Fundos congelados: a liberação ou devolução dos cerca de US$ 3 bilhões travados é vista por analistas como passo para o mercado se acalmar.",
+  "Sábado (31/10): fechamento mensal; outubro acumula queda de cerca de 6,5% no BTC.",
+  "Níveis citados: suporte em US$ 76,4 mil (mínima da madrugada) e resistência em US$ 81,3 mil; abaixo do suporte, a média de 200 dias fica perto de US$ 73,1 mil.",
+  "ETFs: em 29/10, os de bitcoin tiveram o 4º dia seguido de entrada (US$ 17 milhões) e os de ether o 4º de saída (US$ 105 milhões); veja se o ataque muda esse fluxo."
  ],
  "fontes": [
   {
-   "nome": "Coin Gabbar – mercado e agenda (29/10)",
-   "url": "https://www.coingabbar.com/en/crypto-news-bitcoin-ethereum-price-today-fed-rate-pce-inflation"
+   "nome": "crypto.news – o que se sabe do ataque à Binance (30/10)",
+   "url": "https://crypto.news/binance-hack-what-happened-and-where-the-6-3-billion-went/"
   },
   {
-   "nome": "Analytics Insight – preço do BTC e ETH (29/10)",
-   "url": "https://www.analyticsinsight.net/price-analysis/crypto-prices-today-bitcoin-slips-near-usd-80361-as-fed-hold-keeps-hike-fears-alive"
+   "nome": "CryptoTicker – BTC no fechamento mensal (30/10)",
+   "url": "https://cryptoticker.io/en/bitcoin-price-monthly-close-six-week-low/"
   },
   {
-   "nome": "CryptoTicker – decisão do Fed (28/10)",
-   "url": "https://cryptoticker.io/en/fed-rate-pause-dissent-hike/"
+   "nome": "Analytics Insight – preços, liquidações e PCE (30/10)",
+   "url": "https://www.analyticsinsight.net/price-analysis/crypto-prices-today-bitcoin-fell-near-usd-78483-as-binance-hack-kept-traders-cautious"
   },
   {
-   "nome": "Bloomingbit – fluxo dos ETFs (28/10)",
-   "url": "https://en.bloomingbit.io/feed/news/123174"
-  },
-  {
-   "nome": "CryptoTicker – vencimento de opções (30/10)",
-   "url": "https://cryptoticker.io/en/bitcoin-options-expiry-october-30-2026-max-pain/"
+   "nome": "KuCoin News – fluxo dos ETFs (29/10)",
+   "url": "https://www.kucoin.com/news/flash/bitcoin-etfs-see-17m-inflows-ethereum-etfs-lose-105m-on-october-29"
   }
  ]
 }
