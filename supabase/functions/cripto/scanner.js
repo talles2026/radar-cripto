@@ -203,7 +203,7 @@ export function montarOportunidades(ops) {
   }
   venda.sort((a, b) => b.pont - a.pont);
   return {
-    compra: compraFinal, venda: venda.slice(0, 10),
+    compra: compraFinal, venda,
     geral: Object.fromEntries(Object.entries(geral).map(([k, v]) => [k, { mediaR: +v.mediaR.toFixed(3), ops: v.ops }])),
   };
 }

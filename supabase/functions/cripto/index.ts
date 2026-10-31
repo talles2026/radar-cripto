@@ -138,6 +138,83 @@ async function radarMercado() {
   return out;
 }
 
+// ---------------------------------------------------------------- avisos das melhores do mercado
+// chave de compra avisada: opc:PAR:regra:entrada:stop[:2]  (fica 90 dias, para acompanhar a saída)
+// ":2" no fim = alvo já batido; o stop passa a ser a entrada (não perde dinheiro no resto)
+const pctN = (x: number) => `${x >= 0 ? "+" : ""}${(x * 100).toFixed(1).replace(".", ",")}%`;
+async function avisosMercado(subs: J[]) {
+  const quer = (s: J, k: string) => { const a = s.prefs?.auto ?? {}; return (a[k] ?? (k === "mercado" ? true : a.entrada ?? true)) === true; };
+  const ativos = subs.filter((s: J) => quer(s, "mercado") && (quer(s, "compra") || quer(s, "venda")));
+  if (!ativos.length) return 0;
+  const min = new Date().getUTCMinutes();
+  const varrer = min % 15 < 2;                 // ranking completo a cada 15 min; stop/alvo das compras a cada 2 min
+  const m: J | null = varrer ? await radarMercado().catch(() => null) : null;
+  const ops: J = m?.oportunidades ?? {};
+  // compras já avisadas a cada celular (para acompanhar stop, alvo e saída)
+  const { data: compras } = await db.from("cripto_enviados").select("endpoint,chave,quando").like("chave", "opc:%").gte("quando", new Date(Date.now() - 90 * 864e5).toISOString());
+  const abertas: Record<string, J[]> = {};
+  for (const c of compras ?? []) {
+    const [, par, regra, ent, stop, fase] = String(c.chave).split(":");
+    if (+ent > 0 && +stop > 0) (abertas[c.endpoint] ||= []).push({ par, regra, ent: +ent, stop: +stop, alvoBatido: fase === "2", chave: c.chave, quando: c.quando });
+  }
+  // preço agora das moedas compradas por aviso
+  const paresAbertos = [...new Set(Object.values(abertas).flat().map((x) => x.par))].filter((p) => /^[A-Z0-9]{5,20}$/.test(p));
+  const preco: Record<string, number> = {};
+  if (paresAbertos.length) {
+    const t = await binance(`/api/v3/ticker/price?symbols=${encodeURIComponent(JSON.stringify(paresAbertos))}`).catch(() => null);
+    for (const x of t ?? []) preco[x.symbol] = +x.price;
+  }
+  let n = 0;
+  for (const s of ativos) {
+    const fila: J[] = [];
+    const minhas = abertas[s.endpoint] ?? [];
+    const vendidas = new Set<string>();
+    // a) stop e alvo das compras avisadas (a cada 2 min, preço ao vivo)
+    if (quer(s, "venda")) for (const a of minhas) {
+      const p = preco[a.par]; if (!p) continue;
+      const alvo = a.ent + 2 * (a.ent - a.stop);
+      if (p <= a.stop) { vendidas.add(a.par); fila.push({ pri: 0, chave: `ovs:${a.chave.slice(4)}`,
+        title: a.alvoBatido ? `🔴 VENDER AGORA o resto de ${base(a.par)}: voltou à entrada` : `🔴 VENDER AGORA ${base(a.par)}: chegou no stop`,
+        body: `Preço ${fP(p)} ≤ stop ${fP(a.stop)}. Avisei compra a ~${fP(a.ent)} (${pctN(p / a.ent - 1)}). Saia para proteger o capital.`, fim: a.chave }); }
+      else if (!a.alvoBatido && p >= alvo) fila.push({ pri: 1, chave: `ova:${a.chave.slice(4)}`, title: `🟠 VENDER AGORA metade de ${base(a.par)}: bateu o alvo`,
+        body: `Preço ${fP(p)} ≥ alvo ${fP(alvo)} (${pctN(p / a.ent - 1)} desde a compra). Venda metade; o resto fica com stop na entrada (${fP(a.ent)}) e eu aviso a hora de vender.`,
+        fim: a.chave, novo: `opc:${a.par}:${a.regra}:${a.ent}:${a.ent}:2` });
+    }
+    if (varrer && m) {
+      // b) VENDER AGORA: moedas da lista ou compradas por aviso que entraram no ranking de venda
+      const tenho = new Set<string>([...(s.pares ?? []), ...minhas.map((x) => x.par)]);
+      if (quer(s, "venda")) for (const v of ops.venda ?? []) {
+        if (!tenho.has(v.s) || vendidas.has(v.s)) continue;
+        const lucro = v.tipo === "lucro";
+        fila.push({ pri: lucro ? 1 : 0, chave: `opv:${v.s}:${String(v.motivos?.[0] ?? "").slice(0, 40)}`,
+          title: lucro ? `🟠 VENDER AGORA (parte) ${v.b}: realizar lucro` : `🔴 VENDER AGORA ${v.b}`,
+          body: `${(v.motivos ?? []).join(" ")} Preço ${fP(v.p)}.`, fim: lucro ? null : minhas.find((x) => x.par === v.s)?.chave });
+      }
+      // c) COMPRAR AGORA: só sinais confirmados (não "quase") das regras que pagam na moeda
+      if (quer(s, "compra")) for (const c of (ops.compra ?? []).filter((x: J) => x.estado === "comprar").slice(0, 5)) {
+        if (minhas.some((x) => x.par === c.s)) continue;     // já avisada e ainda acompanhando
+        const ent = +(+c.entrada).toPrecision(6), stop = +(+c.stop).toPrecision(6);
+        fila.push({ pri: 2, chave: `opc:${c.s}:${c.id}:${ent}:${stop}`, title: `🟢 COMPRAR AGORA ${c.b}`,
+          body: `${c.regra}. Compra ~${fP(c.entrada)}, stop ${fP(c.stop)} (${pctN(-c.risco)}), alvo ${fP(c.alvo)} (${pctN(2 * c.risco)}). Nesta moeda: ${c.ops} operações, acertou ${Math.round((c.acerto ?? 0) * 100)}%. Vou avisar a hora de vender.` });
+      }
+    }
+    if (!fila.length) continue;
+    const { data: ja } = await db.from("cripto_enviados").select("chave").eq("endpoint", s.endpoint).in("chave", fila.map((f) => f.chave));
+    const jaSet = new Set((ja ?? []).map((x: J) => x.chave));
+    const novos = fila.filter((f) => !jaSet.has(f.chave)).sort((a, b) => a.pri - b.pri);
+    for (const f of novos.slice(0, 4)) {
+      const par = f.chave.split(":")[1];
+      if (await enviar(s, { title: f.title, body: f.body, tag: f.chave, url: `${SITE}?par=${par}` })) {
+        n++; await db.from("cripto_enviados").upsert({ endpoint: s.endpoint, chave: f.chave });
+        // saída avisada: para de acompanhar aquela compra
+        if (f.fim) await db.from("cripto_enviados").delete().eq("endpoint", s.endpoint).eq("chave", f.fim);
+        if (f.novo) await db.from("cripto_enviados").upsert({ endpoint: s.endpoint, chave: f.novo });
+      }
+    }
+  }
+  return n;
+}
+
 async function rodar() {
   const { data: subs } = await db.from("cripto_inscricoes").select("*");
   if (!subs?.length) return { inscricoes: 0 };
@@ -163,6 +240,10 @@ async function rodar() {
     }
     if (restantes.length !== s.alertas.length) await db.from("cripto_inscricoes").update({ alertas: restantes }).eq("endpoint", s.endpoint);
   }
+
+  // 2) MELHORES DO MERCADO: "COMPRAR AGORA" nas 80 maiores moedas e "VENDER AGORA" nas que a pessoa
+  //    tem na lista ou recebeu aviso de compra (para não perder a saída de nenhuma compra avisada).
+  try { enviados += await avisosMercado(subs); } catch (_) { /* não derruba o resto */ }
 
   // 2) momentos de COMPRA e de VENDA nas moedas da lista (a cada 15 minutos)
   const min = new Date().getUTCMinutes();
@@ -246,7 +327,8 @@ async function rodar() {
         }
       }
     }
-    await db.from("cripto_enviados").delete().lt("quando", new Date(Date.now() - 14 * 86400e3).toISOString());
+    await db.from("cripto_enviados").delete().lt("quando", new Date(Date.now() - 14 * 86400e3).toISOString()).not("chave", "like", "opc:%");
+    await db.from("cripto_enviados").delete().lt("quando", new Date(Date.now() - 90 * 86400e3).toISOString());
   }
   return { inscricoes: subs.length, alertasPreco: enviados, sinais };
 }

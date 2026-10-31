@@ -214,6 +214,7 @@ details.mais summary{cursor:pointer;color:var(--muted);font-size:.84rem;margin-t
 .oplista .num3 span{background:var(--surface);border-radius:8px;padding:5px 6px;font-size:.74rem;color:var(--muted);text-align:center;line-height:1.25}
 .oplista .num3 b{display:block;font-family:var(--mono);font-size:.8rem;color:var(--ink)}
 .oplista .est{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:.68rem;font-weight:700;vertical-align:1px}
+.est.comprar{background:var(--up);color:#06130d}
 .est.armado,.est.recente{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
 .est.lucro{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
 .est.proteger{background:var(--down);color:#fff}
@@ -299,7 +300,7 @@ footer a{color:inherit}
 import { analisar, series } from "./analise.js";
 import { situacao } from "./setups.js";
 
-const APP_VERSAO = "11";
+const APP_VERSAO = "12";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -837,20 +838,22 @@ function renderOport(){
   const o = m?.oportunidades;
   if (!o) { el.innerHTML = `<h2>Melhores para comprar e vender agora</h2><p class="small muted">Calculando com o histórico das 80 moedas mais negociadas… aparece na próxima atualização.</p>`; return; }
   const reais = v => usdBrl ? `<br>${fBRL(v * usdBrl)}` : "";
-  const nomeEst = { comprar:"COMPRAR", recente:"AINDA DÁ", armado:"QUASE", lucro:"REALIZAR LUCRO", proteger:"SAIR / PROTEGER" };
+  const nomeEst = { comprar:"COMPRAR AGORA", recente:"AINDA DÁ PARA COMPRAR", armado:"AGUARDAR", lucro:"VENDER PARTE AGORA", proteger:"VENDER AGORA" };
   let corpo;
+  // venda: primeiro as moedas que estão na sua lista, depois as demais (até 10)
+  const vendas = [...(o.venda || [])].sort((p, q) => (lista.includes(q.s) - lista.includes(p.s)) || (q.pont - p.pont)).slice(0, 10);
   if (abaOp === "compra") {
     corpo = o.compra.length ? o.compra.map((x, i) => `<li><button data-s="${x.s}">
       <span class="pos">${i + 1}º</span>
-      <span><b>${esc(x.b)}</b><span class="est ${x.estado}">${nomeEst[x.estado]}</span><br><span class="small muted">${esc(x.regra)}</span></span>
+      <span><b>${esc(x.b)}</b><span class="est ${x.estado}">${nomeEst[x.estado]}</span>${x.estado === "armado" ? `<span class="small muted"> · compra se fechar acima de ${fP(x.entrada)}</span>` : ""}<br><span class="small muted">${esc(x.regra)}</span></span>
       <span class="ganho up">+${(x.esperado * 100).toFixed(1).replace(".", ",")}%<br><span class="small muted" style="font-weight:400">por operação</span></span>
       <span class="mot">${esc(x.txt)} No histórico desta moeda: ${x.ops} operações, acertou ${pc(x.acerto)}, média ${pr(x.retMedio)} em ~${Math.round(x.dias || 0)} dias.</span>
       <span class="num3"><span>${x.estado === "armado" ? "Compra acima de" : "Entrada"}<b>${fP(x.entrada)}</b>${reais(x.entrada)}</span><span>Stop (${pr(-x.risco)})<b class="down">${fP(x.stop)}</b>${reais(x.stop)}</span><span>Alvo (${pr(2 * x.risco)})<b class="up">${fP(x.alvo)}</b>${reais(x.alvo)}</span></span>
     </button></li>`).join("") : `<li class="small muted">Nenhuma moeda com regra que deu lucro no histórico está no ponto de compra agora. Melhor esperar do que forçar.</li>`;
   } else {
-    corpo = o.venda.length ? o.venda.map((x, i) => `<li><button data-s="${x.s}">
+    corpo = vendas.length ? vendas.map((x, i) => `<li><button data-s="${x.s}">
       <span class="pos">${i + 1}º</span>
-      <span><b>${esc(x.b)}</b><span class="est ${x.tipo}">${nomeEst[x.tipo]}</span></span>
+      <span><b>${esc(x.b)}</b><span class="est ${x.tipo}">${nomeEst[x.tipo]}</span>${lista.includes(x.s) ? `<br><span class="small muted">na sua lista</span>` : ""}</span>
       <span class="pv">${fP(x.p)} <span class="${x.var24 >= 0 ? "up" : "down"}">${fPct(x.var24)}</span></span>
       <span class="mot">${x.motivos.map(esc).join(" ")}</span>
     </button></li>`).join("") : `<li class="small muted">Nenhum sinal forte de venda agora.</li>`;
@@ -859,10 +862,10 @@ function renderOport(){
     ? "Moedas em que uma regra de entrada testada no histórico daquela moeda está dando compra agora (ou quase). Ordenadas pelo ganho médio esperado por operação, já com taxas."
     : "Se você tem estas moedas: hora de realizar lucro (subida esticada) ou de sair para proteger o capital (regra mandou vender, stop batido, tendência virando).";
   el.innerHTML = `<h2>Melhores para comprar e vender agora</h2>
-    <div class="abas"><button data-o="compra" class="${abaOp === "compra" ? "sel" : ""}">Comprar · ${o.compra.length}</button><button data-o="venda" class="${abaOp === "venda" ? "sel" : ""}">Vender · ${o.venda.length}</button></div>
+    <div class="abas"><button data-o="compra" class="${abaOp === "compra" ? "sel" : ""}">Comprar · ${o.compra.length}</button><button data-o="venda" class="${abaOp === "venda" ? "sel" : ""}">Vender · ${vendas.length}</button></div>
     <p class="small muted" style="margin:0 0 8px">${desc}</p>
     <ul class="mlista oplista">${corpo}</ul>
-    <p class="aviso-leg">Gráfico diário das 80 moedas com mais volume na Binance, até ~2,7 anos de histórico · ${new Date(m.atualizado).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" })}. Ganho esperado é a média do passado, não garantia: cerca de metade das operações perde. Use sempre o stop e não arrisque mais de 1–2% do capital por operação. Toque numa moeda para abrir o gráfico.</p>`;
+    <p class="aviso-leg">Com os alertas ligados, "COMPRAR AGORA" e "VENDER AGORA" chegam no celular. Gráfico diário das 80 moedas com mais volume na Binance, até ~2,7 anos de histórico · ${new Date(m.atualizado).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" })}. Ganho esperado é a média do passado, não garantia: cerca de metade das operações perde. Use sempre o stop e não arrisque mais de 1–2% do capital por operação. Toque numa moeda para abrir o gráfico.</p>`;
   el.querySelectorAll("[data-o]").forEach(b => b.onclick = () => { abaOp = b.dataset.o; store.set("abaOp", abaOp); renderOport(); });
   el.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { const s = b.dataset.s; addLista(s); escolher(s); scrollTo({ top: 0, behavior: "smooth" }); });
 }
@@ -964,7 +967,7 @@ $("lnkTema").onclick = e => { e.preventDefault(); const n = document.documentEle
 { const t = store.get("tema"); if (t) document.documentElement.dataset.theme = t; }
 
 // ---------- alertas no celular
-const AUTO = [["compra","🟢 Hora de comprar"],["venda","🔴 Hora de vender (saída da regra, stop, realizar lucro, virada para baixa)"]];
+const AUTO = [["compra","🟢 Comprar agora"],["venda","🔴 Vender agora (saída da regra, stop, alvo, realizar lucro, virada para baixa)"],["mercado","🏆 Melhores do mercado inteiro (não só da minha lista)"]];
 function b64(s){ const p = "=".repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); }
 async function inscricao(){ if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
 async function rpc(fn, body){
@@ -972,7 +975,8 @@ async function rpc(fn, body){
   if (!r.ok) throw new Error(await r.text()); const t = await r.text(); return t ? JSON.parse(t) : null;
 }
 let alertas = store.get("alertas", []);   // {id, par, tipo: "acima"|"abaixo", valor}
-let prefs = store.get("prefs", { auto: { compra:true, venda:true }, tfs: ["4h","1d"] });
+let prefs = store.get("prefs", { auto: { compra:true, venda:true, mercado:true }, tfs: ["4h","1d"] });
+if (prefs.auto && prefs.auto.mercado === undefined) { prefs.auto.mercado = true; store.set("prefs", prefs); }
 // versão antiga tinha vários sinais técnicos; agora só compra e venda
 if (prefs.auto.compra === undefined) { const e = prefs.auto.entrada !== false; prefs.auto = { compra: e, venda: e }; store.set("prefs", prefs); setTimeout(() => salvarServidor().catch(() => {}), 3000); }
 async function salvarServidor(){
@@ -992,7 +996,7 @@ async function renderAlertas(){
   const sub = await inscricao().catch(() => null);
   const t = tickers[par];
   if (!sub) {
-    el.innerHTML = `<p class="small" style="margin:0 0 10px">Receba aviso da hora de comprar e da hora de vender as moedas da sua lista, e quando o preço chegar onde você quer. Chega mesmo com o app fechado.</p><button class="btn" id="aLigar">🔔 Ligar alertas</button>`;
+    el.innerHTML = `<p class="small" style="margin:0 0 10px">Receba "COMPRAR AGORA" e "VENDER AGORA" das melhores moedas do mercado e da sua lista, e quando o preço chegar onde você quer. Chega mesmo com o app fechado.</p><button class="btn" id="aLigar">🔔 Ligar alertas</button>`;
     $("aLigar").onclick = async () => {
       try {
         if (await Notification.requestPermission() !== "granted") return toast("Permissão negada. Libere as notificações nas configurações.");
@@ -1009,7 +1013,7 @@ async function renderAlertas(){
     <div class="form"><select id="aTipo"><option value="acima">Subir acima de</option><option value="abaixo">Cair abaixo de</option></select>
       <input id="aValor" type="number" inputmode="decimal" step="any" placeholder="${t ? fP(t.p).replace(/\./g, "").replace(",", ".") : "preço"}"><button class="btn" id="aAdd">Criar</button></div>
     <ul class="alertas-lista">${alertas.map(a => `<li><span><b>${base(a.par)}</b> ${a.tipo === "acima" ? "subir acima de" : "cair abaixo de"} <b class="num">${fP(a.valor)}</b></span><button data-id="${a.id}" aria-label="Apagar">✕</button></li>`).join("") || `<li class="muted">Nenhum alerta de preço criado.</li>`}</ul>
-    <p class="eyebrow" style="margin:14px 0 0">Avisos de compra e venda nas moedas da lista</p><p class="small muted" style="margin:4px 0 0">Só das regras que deram lucro no histórico de cada moeda. Ferramenta de apoio, não é recomendação.</p>
+    <p class="eyebrow" style="margin:14px 0 0">Avisos de compra e venda</p><p class="small muted" style="margin:4px 0 0">"Comprar agora" vem das moedas da sua lista e, ligando a última opção, das melhores do mercado inteiro. Toda compra avisada fica acompanhada: chega "Vender agora" no stop, no alvo e quando a regra mandar sair. Só regras que deram lucro no histórico de cada moeda; não é garantia.</p>
     <div class="prefs">${AUTO.map(([k, n]) => `<label><input type="checkbox" data-a="${k}" ${prefs.auto[k] ? "checked" : ""}>${n}</label>`).join("")}</div>
     <p class="eyebrow" style="margin:6px 0 0">Nos tempos gráficos</p>
     <div class="prefs">${[["1h","1 hora"],["4h","4 horas"],["1d","Diário"]].map(([k, n]) => `<label><input type="checkbox" data-t="${k}" ${prefs.tfs.includes(k) ? "checked" : ""}>${n}</label>`).join("")}</div>
