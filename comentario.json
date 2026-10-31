@@ -1,30 +1,38 @@
 {
- "data": "2026-10-30T10:45:00Z",
- "titulo": "Ataque à Binance derruba BTC para perto de US$ 78 mil",
- "texto": "Na noite de quinta (29/10), uma carteira quente da Binance foi atacada e cerca de US$ 6,3 bilhões foram desviados; a Binance diz que vai cobrir todas as perdas dos clientes com o fundo SAFU e recursos próprios, e parceiros já congelaram cerca de US$ 3 bilhões. Com o susto, o bitcoin caiu até US$ 76,4 mil (menor nível desde 18/09) e era negociado perto de US$ 78,2 mil na manhã de sexta, com ether, solana e XRP caindo mais que o BTC e cerca de US$ 1,5 bilhão em posições alavancadas liquidadas em 24 horas. O índice de medo e ganância despencou de 51 para 30 (medo), num mercado que já vinha pressionado pela inflação PCE de 3,6% nos EUA e pelo receio de alta de juros em dezembro. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-10-31T10:43:35Z",
+ "titulo": "BTC perto de US$ 77 mil com saída recorde dos ETFs",
+ "texto": "O bitcoin seguiu pressionado no sábado (31/10) e era negociado perto de US$ 77,4 mil, depois de tocar US$ 76,3 mil, ainda sob o efeito do ataque de US$ 6,3 bilhões à Binance; os saques na corretora seguem pausados e a Binance diz ter separado mais de US$ 6,34 bilhões próprios para cobrir as perdas. Na sexta (30/10), os ETFs de bitcoin nos EUA tiveram saída de US$ 643 milhões, a maior em um dia desde junho, e os de ether perderam US$ 156 milhões, interrompendo quatro dias de entrada nos fundos de BTC. Em 24 horas, cerca de US$ 398 milhões em posições alavancadas foram liquidadas, quase 77% delas apostas na alta, num clima de cautela reforçado pelo Fed, que manteve os juros em 3,75%–4% com dois votos a favor de subir. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Binance: acompanhe os avisos oficiais sobre saques por rede/token, o relatório técnico prometido e a nova prova de reservas.",
-  "Fundos congelados: a liberação ou devolução dos cerca de US$ 3 bilhões travados é vista por analistas como passo para o mercado se acalmar.",
-  "Sábado (31/10): fechamento mensal; outubro acumula queda de cerca de 6,5% no BTC.",
-  "Níveis citados: suporte em US$ 76,4 mil (mínima da madrugada) e resistência em US$ 81,3 mil; abaixo do suporte, a média de 200 dias fica perto de US$ 73,1 mil.",
-  "ETFs: em 29/10, os de bitcoin tiveram o 4º dia seguido de entrada (US$ 17 milhões) e os de ether o 4º de saída (US$ 105 milhões); veja se o ataque muda esse fluxo."
+  "Binance: a corretora pretende reabrir os saques em etapas a partir de domingo (1/11), após checagens de segurança; o resultado da prova de reservas é esperado para segunda (2/11).",
+  "Fechamento mensal hoje (31/10): o preço médio de compra do BTC dos ETFs americanos é estimado pela Glassnode em US$ 81,5 mil, acima do preço atual.",
+  "ETFs: veja se a saída de sexta continua na segunda ou se volta a entrada; os ETFs de ether já perderam cerca de US$ 1,6 bilhão em outubro.",
+  "EUA: relatório de emprego (payroll) previsto para sexta (6/11); a próxima reunião do Fed é em 8 e 9/12, com novas projeções de juros.",
+  "Fundos congelados: parceiros travaram cerca de US$ 3 bilhões do ataque; novidades sobre devolução podem acalmar o mercado."
  ],
  "fontes": [
   {
-   "nome": "crypto.news – o que se sabe do ataque à Binance (30/10)",
-   "url": "https://crypto.news/binance-hack-what-happened-and-where-the-6-3-billion-went/"
+   "nome": "crypto.news – ETFs perdem US$ 643 milhões (31/10)",
+   "url": "https://crypto.news/bitcoin-etfs-643-million-outflows-october-30/"
   },
   {
-   "nome": "CryptoTicker – BTC no fechamento mensal (30/10)",
-   "url": "https://cryptoticker.io/en/bitcoin-price-monthly-close-six-week-low/"
+   "nome": "CoinCentral – linha do tempo do ataque à Binance (31/10)",
+   "url": "https://coincentral.com/binance-hack-timeline-from-6-3-billion-theft-to-sunday-reopening-plan"
   },
   {
-   "nome": "Analytics Insight – preços, liquidações e PCE (30/10)",
-   "url": "https://www.analyticsinsight.net/price-analysis/crypto-prices-today-bitcoin-fell-near-usd-78483-as-binance-hack-kept-traders-cautious"
+   "nome": "CoinDesk – Binance separa US$ 6,34 bilhões (30/10)",
+   "url": "https://www.coindesk.com/business/2026/10/30/binance-arranges-usd6-34-billion-to-cover-losses-from-record-crypto-hack"
   },
   {
-   "nome": "KuCoin News – fluxo dos ETFs (29/10)",
-   "url": "https://www.kucoin.com/news/flash/bitcoin-etfs-see-17m-inflows-ethereum-etfs-lose-105m-on-october-29"
+   "nome": "CoinCentral – liquidações de US$ 400 milhões (31/10)",
+   "url": "https://coincentral.com/crypto-liquidations-reach-400-million-as-binance-hack-pressures-bitcoin-ethereum-and-solana"
+  },
+  {
+   "nome": "CryptoTicker – Fed mantém juros, dois pedem alta (28/10)",
+   "url": "https://cryptoticker.io/en/fed-rate-pause-dissent-hike/"
+  },
+  {
+   "nome": "CalendarX – relatório de emprego dos EUA",
+   "url": "https://www.calendarx.com/events/jobs-report-november-2026"
   }
  ]
 }
