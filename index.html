@@ -208,6 +208,16 @@ details.mais summary{cursor:pointer;color:var(--muted);font-size:.84rem;margin-t
 .mlista b{font-size:.92rem}
 .mlista .pv{font-family:var(--mono);font-size:.82rem;text-align:right}
 .mlista .mot{grid-column:1/-1;font-size:.78rem;color:var(--muted)}
+.oplista li>button{grid-template-columns:auto 1fr auto;align-items:center}
+.oplista .pos{font-family:var(--mono);font-size:.78rem;color:var(--muted);width:1.4em}
+.oplista .num3{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.oplista .num3 span{background:var(--surface);border-radius:8px;padding:5px 6px;font-size:.74rem;color:var(--muted);text-align:center;line-height:1.25}
+.oplista .num3 b{display:block;font-family:var(--mono);font-size:.8rem;color:var(--ink)}
+.oplista .est{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:.68rem;font-weight:700;vertical-align:1px}
+.est.armado,.est.recente{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+.est.lucro{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.est.proteger{background:var(--down);color:#fff}
+.oplista .ganho{font-family:var(--mono);font-size:.86rem;font-weight:700;text-align:right}
 .clima{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
 .clima div{background:var(--soft);border-radius:10px;padding:7px 8px;text-align:center}
 .clima b{display:block;font-family:var(--mono);font-size:1rem}
@@ -239,6 +249,8 @@ footer a{color:inherit}
   <div class="lista-leg" id="listaLeg"></div>
 
   <section class="card" id="cardPreco"><div class="skel"></div></section>
+
+  <section class="card" id="cardOport"><h2>Melhores para comprar e vender agora</h2><div class="skel" style="height:90px"></div></section>
 
   <section class="card" id="cardSetups"><h2>Pontos de entrada e saída</h2><div class="skel"></div></section>
 
@@ -287,7 +299,7 @@ footer a{color:inherit}
 import { analisar, series } from "./analise.js";
 import { situacao } from "./setups.js";
 
-const APP_VERSAO = "10";
+const APP_VERSAO = "11";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -799,8 +811,9 @@ async function carregarComentario(){
 const ABAS = [["fortes","Mais fortes"],["rompendo","Rompendo"],["recuos","Recuos na alta"],["volume","Volume anormal"],["fracas","Mais fracas"]];
 let mercado = null, aba = store.get("aba", "fortes");
 async function carregarMercado(){
-  try { const r = await fetch(`${CONFIG.fn}?acao=mercado`, { signal: AbortSignal.timeout(60000) }); mercado = await r.json(); if (mercado.erro) throw 0; renderMercado(); }
-  catch (e) { $("cardMercado").innerHTML = `<h2>Radar do mercado</h2><p class="small muted">Não foi possível varrer o mercado agora.</p>`; }
+  try { const r = await fetch(`${CONFIG.fn}?acao=mercado`, { signal: AbortSignal.timeout(60000) }); mercado = await r.json(); if (mercado.erro) throw 0; renderMercado(); renderOport(); }
+  catch (e) { $("cardMercado").innerHTML = `<h2>Radar do mercado</h2><p class="small muted">Não foi possível varrer o mercado agora.</p>`;
+    if (!mercado) $("cardOport").innerHTML = `<h2>Melhores para comprar e vender agora</h2><p class="small muted">Não foi possível varrer o mercado agora. Tente atualizar em alguns minutos.</p>`; }
 }
 function renderMercado(){
   const m = mercado; if (!m) return;
@@ -816,6 +829,42 @@ function renderMercado(){
     <p class="aviso-leg">Varredura das ${a.moedas || 80} moedas com mais volume na Binance, pelo gráfico diário · ${new Date(m.atualizado).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" })}. Mostra onde está o movimento, não o que vai acontecer. Toque numa moeda para abrir o gráfico.</p>`;
   $("cardMercado").querySelectorAll("[data-a]").forEach(b => b.onclick = () => { aba = b.dataset.a; store.set("aba", aba); renderMercado(); });
   $("cardMercado").querySelectorAll("[data-s]").forEach(b => b.onclick = () => { const s = b.dataset.s; addLista(s); escolher(s); scrollTo({ top: 0, behavior: "smooth" }); });
+}
+// ---------- melhores para comprar e vender (vem junto com a varredura do mercado)
+let abaOp = store.get("abaOp", "compra");
+function renderOport(){
+  const el = $("cardOport"), m = mercado;
+  const o = m?.oportunidades;
+  if (!o) { el.innerHTML = `<h2>Melhores para comprar e vender agora</h2><p class="small muted">Calculando com o histórico das 80 moedas mais negociadas… aparece na próxima atualização.</p>`; return; }
+  const reais = v => usdBrl ? `<br>${fBRL(v * usdBrl)}` : "";
+  const nomeEst = { comprar:"COMPRAR", recente:"AINDA DÁ", armado:"QUASE", lucro:"REALIZAR LUCRO", proteger:"SAIR / PROTEGER" };
+  let corpo;
+  if (abaOp === "compra") {
+    corpo = o.compra.length ? o.compra.map((x, i) => `<li><button data-s="${x.s}">
+      <span class="pos">${i + 1}º</span>
+      <span><b>${esc(x.b)}</b><span class="est ${x.estado}">${nomeEst[x.estado]}</span><br><span class="small muted">${esc(x.regra)}</span></span>
+      <span class="ganho up">+${(x.esperado * 100).toFixed(1).replace(".", ",")}%<br><span class="small muted" style="font-weight:400">por operação</span></span>
+      <span class="mot">${esc(x.txt)} No histórico desta moeda: ${x.ops} operações, acertou ${pc(x.acerto)}, média ${pr(x.retMedio)} em ~${Math.round(x.dias || 0)} dias.</span>
+      <span class="num3"><span>${x.estado === "armado" ? "Compra acima de" : "Entrada"}<b>${fP(x.entrada)}</b>${reais(x.entrada)}</span><span>Stop (${pr(-x.risco)})<b class="down">${fP(x.stop)}</b>${reais(x.stop)}</span><span>Alvo (${pr(2 * x.risco)})<b class="up">${fP(x.alvo)}</b>${reais(x.alvo)}</span></span>
+    </button></li>`).join("") : `<li class="small muted">Nenhuma moeda com regra que deu lucro no histórico está no ponto de compra agora. Melhor esperar do que forçar.</li>`;
+  } else {
+    corpo = o.venda.length ? o.venda.map((x, i) => `<li><button data-s="${x.s}">
+      <span class="pos">${i + 1}º</span>
+      <span><b>${esc(x.b)}</b><span class="est ${x.tipo}">${nomeEst[x.tipo]}</span></span>
+      <span class="pv">${fP(x.p)} <span class="${x.var24 >= 0 ? "up" : "down"}">${fPct(x.var24)}</span></span>
+      <span class="mot">${x.motivos.map(esc).join(" ")}</span>
+    </button></li>`).join("") : `<li class="small muted">Nenhum sinal forte de venda agora.</li>`;
+  }
+  const desc = abaOp === "compra"
+    ? "Moedas em que uma regra de entrada testada no histórico daquela moeda está dando compra agora (ou quase). Ordenadas pelo ganho médio esperado por operação, já com taxas."
+    : "Se você tem estas moedas: hora de realizar lucro (subida esticada) ou de sair para proteger o capital (regra mandou vender, stop batido, tendência virando).";
+  el.innerHTML = `<h2>Melhores para comprar e vender agora</h2>
+    <div class="abas"><button data-o="compra" class="${abaOp === "compra" ? "sel" : ""}">Comprar · ${o.compra.length}</button><button data-o="venda" class="${abaOp === "venda" ? "sel" : ""}">Vender · ${o.venda.length}</button></div>
+    <p class="small muted" style="margin:0 0 8px">${desc}</p>
+    <ul class="mlista oplista">${corpo}</ul>
+    <p class="aviso-leg">Gráfico diário das 80 moedas com mais volume na Binance, até ~2,7 anos de histórico · ${new Date(m.atualizado).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" })}. Ganho esperado é a média do passado, não garantia: cerca de metade das operações perde. Use sempre o stop e não arrisque mais de 1–2% do capital por operação. Toque numa moeda para abrir o gráfico.</p>`;
+  el.querySelectorAll("[data-o]").forEach(b => b.onclick = () => { abaOp = b.dataset.o; store.set("abaOp", abaOp); renderOport(); });
+  el.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { const s = b.dataset.s; addLista(s); escolher(s); scrollTo({ top: 0, behavior: "smooth" }); });
 }
 function addLista(s){ if (!lista.includes(s)) { lista.push(s); store.set("lista", lista); } }
 

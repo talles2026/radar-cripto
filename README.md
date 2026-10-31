@@ -10,6 +10,7 @@ Gráficos de candles da Binance, otimizados para celular: https://talles2026.git
 
 - **O que o histórico diz**: busca os momentos mais parecidos com o atual (anos de candles) e mostra o que aconteceu depois, a faixa provável de preço, um teste honesto do método no passado e o placar de cada sinal.
 - **Pontos de entrada e saída**: quatro regras fixas de compra e venda (recuo na tendência, rompimento com volume, repique de sobrevenda, seguir a tendência) com entrada, stop, alvos e regra de saída; cada uma testada em todo o histórico da moeda com taxas, e só as que funcionaram geram aviso de compra e de venda no celular (inclui stop batido, realizar lucro com IFR acima de 75 e fechamento abaixo da média de 200) (`setups.js`).
+- **Melhores para comprar e vender agora** (logo abaixo do painel): varre as 80 moedas mais negociadas da Binance, roda as quatro regras de entrada em até ~2,7 anos de gráfico diário de cada uma e lista as que estão no ponto de compra, ordenadas pelo ganho médio por operação (com taxas), com entrada, stop e alvo; e as que estão na hora de vender (regra mandou sair, stop batido, subida esticada, perda da média de 200).
 - **Calculadora de risco**: tamanho da posição pelo quanto você aceita perder, stop e alvo sugeridos, relação ganho/risco.
 - **Comentário do dia**: escrito por uma tarefa agendada que lê as notícias (arquivo `comentario.json`).
 
