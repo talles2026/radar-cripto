@@ -6,6 +6,7 @@ import webpush from "npm:web-push@3.6.7";
 import { calcular } from "./probabilidades.js";
 import { filtrarUniverso, medir, montar, oportunidade, montarOportunidades } from "./scanner.js";
 import { situacao, indicadores } from "./setups.js";
+import { medirMoeda, montarCurto, regimeBTC } from "./curto.js";
 
 const SITE = "https://talles2026.github.io/radar-cripto/";
 const APIS = ["https://api.binance.com", "https://data-api.binance.vision", "https://api1.binance.com", "https://api2.binance.com"];
@@ -138,18 +139,47 @@ async function radarMercado() {
   return out;
 }
 
+// ---------------------------------------------------------------- curto prazo (velas de 1 hora)
+// Refaz a conta uma vez por hora, 90 s depois de cada vela de 1 hora fechar.
+async function klines1h(par: string) {
+  const a = await binance(`/api/v3/klines?symbol=${par}&interval=1h&limit=1000`);
+  if (!a?.length) return null;
+  const b = await binance(`/api/v3/klines?symbol=${par}&interval=1h&limit=1000&endTime=${a[0][0] - 1}`).catch(() => null);
+  return (b ?? []).concat(a);
+}
+async function radarCurto(soCache = false) {
+  const { data: c } = await db.from("cripto_estat").select("dados,criado").eq("par", "*").eq("tf", "scan1h").maybeSingle();
+  const horaFechada = Math.floor((Date.now() - 90e3) / 36e5) * 36e5 + 90e3;
+  if (c?.dados && (soCache || Date.parse(c.criado) >= horaFechada)) return { ...c.dados, cache: true };
+  const todos = await binance("/api/v3/ticker/24hr");
+  const uni = filtrarUniverso(todos ?? [], 50).filter((t: J) => t.volQ >= 1e7);
+  const kBtc = await klines1h("BTCUSDT");
+  if (!kBtc) throw new Error("sem dados do BTC");
+  const regime = regimeBTC(kBtc);
+  const moedas: J[] = [];
+  const um = async (t: J) => {
+    try { const k = t.s === "BTCUSDT" ? kBtc : await klines1h(t.s); return k ? medirMoeda(t, k) : null; } catch (_) { return null; }
+  };
+  for (let i = 0; i < uni.length; i += 8) moedas.push(...await Promise.all(uni.slice(i, i + 8).map(um)));
+  const out: J = montarCurto(moedas, regime);
+  if (out.moedas >= 20) await db.from("cripto_estat").upsert({ par: "*", tf: "scan1h", dados: out, criado: out.atualizado });
+  return out;
+}
+
 // ---------------------------------------------------------------- avisos das melhores do mercado
 // chave de compra avisada: opc:PAR:regra:entrada:stop[:2]  (fica 90 dias, para acompanhar a saída)
 // ":2" no fim = alvo já batido; o stop passa a ser a entrada (não perde dinheiro no resto)
 const pctN = (x: number) => `${x >= 0 ? "+" : ""}${(x * 100).toFixed(1).replace(".", ",")}%`;
 async function avisosMercado(subs: J[]) {
   const quer = (s: J, k: string) => { const a = s.prefs?.auto ?? {}; return (a[k] ?? (k === "mercado" ? true : a.entrada ?? true)) === true; };
-  const ativos = subs.filter((s: J) => quer(s, "mercado") && (quer(s, "compra") || quer(s, "venda")));
+  const ativos = subs.filter((s: J) => (quer(s, "mercado") || quer(s, "curto")) && (quer(s, "compra") || quer(s, "venda")));
   if (!ativos.length) return 0;
   const min = new Date().getUTCMinutes();
   const varrer = min % 15 < 2;                 // ranking completo a cada 15 min; stop/alvo das compras a cada 2 min
   const m: J | null = varrer ? await radarMercado().catch(() => null) : null;
   const ops: J = m?.oportunidades ?? {};
+  // curto prazo: recalcula na rodada sem varredura diária (para não pesar), senão usa o guardado
+  const curtoD: J | null = ativos.some((s: J) => quer(s, "curto")) ? await radarCurto(varrer).catch(() => null) : null;
   // compras já avisadas a cada celular (para acompanhar stop, alvo e saída)
   const { data: compras } = await db.from("cripto_enviados").select("endpoint,chave,quando").like("chave", "opc:%").gte("quando", new Date(Date.now() - 90 * 864e5).toISOString());
   const abertas: Record<string, J[]> = {};
@@ -172,13 +202,31 @@ async function avisosMercado(subs: J[]) {
     // a) stop e alvo das compras avisadas (a cada 2 min, preço ao vivo)
     if (quer(s, "venda")) for (const a of minhas) {
       const p = preco[a.par]; if (!p) continue;
-      const alvo = a.ent + 2 * (a.ent - a.stop);
-      if (p <= a.stop) { vendidas.add(a.par); fila.push({ pri: 0, chave: `ovs:${a.chave.slice(4)}`,
+      // compra de curto prazo: regra@1h@alvoEmR@prazoEmHoras — vende tudo no alvo ou no fim do prazo
+      const [, tfR, kR, prazoR] = String(a.regra).split("@");
+      const curto = tfR === "1h";
+      const alvo = a.ent + (curto ? +kR || 2 : 2) * (a.ent - a.stop);
+      const venceu = curto && Date.now() >= Date.parse(a.quando) + (+prazoR || 48) * 36e5;
+      if (curto && p > a.stop && p >= alvo) { vendidas.add(a.par); fila.push({ pri: 0, chave: `ovs:${a.chave.slice(4)}`,
+        title: `🟢 VENDER AGORA ${base(a.par)}: bateu o alvo (curto prazo)`,
+        body: `Preço ${fP(p)} ≥ alvo ${fP(alvo)}. Compra avisada a ~${fP(a.ent)} (${pctN(p / a.ent - 1)}). Realize o lucro inteiro.`, fim: a.chave }); }
+      else if (venceu && p > a.stop) { vendidas.add(a.par); fila.push({ pri: 0, chave: `ovs:${a.chave.slice(4)}`,
+        title: `⏱ VENDER AGORA ${base(a.par)}: prazo de ${+prazoR || 48} h acabou`,
+        body: `A operação de curto prazo não chegou ao alvo a tempo. Preço ${fP(p)}, compra avisada a ~${fP(a.ent)} (${pctN(p / a.ent - 1)}). Sair libera o dinheiro para o próximo sinal.`, fim: a.chave }); }
+      else if (p <= a.stop) { vendidas.add(a.par); fila.push({ pri: 0, chave: `ovs:${a.chave.slice(4)}`,
         title: a.alvoBatido ? `🔴 VENDER AGORA o resto de ${base(a.par)}: voltou à entrada` : `🔴 VENDER AGORA ${base(a.par)}: chegou no stop`,
         body: `Preço ${fP(p)} ≤ stop ${fP(a.stop)}. Avisei compra a ~${fP(a.ent)} (${pctN(p / a.ent - 1)}). Saia para proteger o capital.`, fim: a.chave }); }
       else if (!a.alvoBatido && p >= alvo) fila.push({ pri: 1, chave: `ova:${a.chave.slice(4)}`, title: `🟠 VENDER AGORA metade de ${base(a.par)}: bateu o alvo`,
         body: `Preço ${fP(p)} ≥ alvo ${fP(alvo)} (${pctN(p / a.ent - 1)} desde a compra). Venda metade; o resto fica com stop na entrada (${fP(a.ent)}) e eu aviso a hora de vender.`,
         fim: a.chave, novo: `opc:${a.par}:${a.regra}:${a.ent}:${a.ent}:2` });
+    }
+    // d) COMPRAR AGORA de curto prazo (gráfico de 1 hora): só sinais da última hora, regras que pagam agora
+    if (curtoD && quer(s, "curto") && quer(s, "compra")) for (const c of (curtoD.compra ?? []).filter((x: J) => Date.now() - x.desde <= 75 * 60e3).slice(0, 3)) {
+      if (minhas.some((x) => x.par === c.s)) continue;
+      const ent = +(+c.entrada).toPrecision(6), stop = +(+c.stop).toPrecision(6);
+      const hist = c.opsMoeda >= 3 ? ` Nesta moeda: ${c.opsMoeda} operações, acertou ${Math.round((c.acertoMoeda ?? 0) * 100)}%.` : "";
+      fila.push({ pri: 2, chave: `opc:${c.s}:${c.id}@1h@${c.kAlvo}@${c.prazo}:${ent}:${stop}`, title: `⚡ COMPRAR AGORA ${c.b} (curto prazo)`,
+        body: `${c.regra} no gráfico de 1 hora. Compra ~${fP(c.entrada)}, stop ${fP(c.stop)} (${pctN(-c.risco)}), alvo ${fP(c.alvo)} (${pctN(c.kAlvo * c.risco)}), prazo ${c.prazo} h.${hist} Vou avisar a hora de vender.` });
     }
     if (varrer && m) {
       // b) VENDER AGORA: moedas da lista ou compradas por aviso que entraram no ranking de venda
@@ -191,7 +239,7 @@ async function avisosMercado(subs: J[]) {
           body: `${(v.motivos ?? []).join(" ")} Preço ${fP(v.p)}.`, fim: lucro ? null : minhas.find((x) => x.par === v.s)?.chave });
       }
       // c) COMPRAR AGORA: só sinais confirmados (não "quase") das regras que pagam na moeda
-      if (quer(s, "compra")) for (const c of (ops.compra ?? []).filter((x: J) => x.estado === "comprar").slice(0, 5)) {
+      if (quer(s, "compra") && quer(s, "mercado")) for (const c of (ops.compra ?? []).filter((x: J) => x.estado === "comprar").slice(0, 5)) {
         if (minhas.some((x) => x.par === c.s)) continue;     // já avisada e ainda acompanhando
         const ent = +(+c.entrada).toPrecision(6), stop = +(+c.stop).toPrecision(6);
         fila.push({ pri: 2, chave: `opc:${c.s}:${c.id}:${ent}:${stop}`, title: `🟢 COMPRAR AGORA ${c.b}`,
@@ -342,6 +390,12 @@ Deno.serve(async (req: Request) => {
     try {
       const r = await estatisticas(par, tf);
       return new Response(JSON.stringify(r), { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=600" } });
+    } catch (e: any) { return resp({ erro: String(e?.message ?? e) }, 502); }
+  }
+  if (req.method === "GET" && u.searchParams.get("acao") === "curto") {
+    try {
+      const r = await radarCurto();
+      return new Response(JSON.stringify(r), { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=120" } });
     } catch (e: any) { return resp({ erro: String(e?.message ?? e) }, 502); }
   }
   if (req.method === "GET" && u.searchParams.get("acao") === "mercado") {

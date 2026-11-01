@@ -218,6 +218,17 @@ details.mais summary{cursor:pointer;color:var(--muted);font-size:.84rem;margin-t
 .est.armado,.est.recente{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
 .est.lucro{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
 .est.proteger{background:var(--down);color:#fff}
+.est.observar{background:var(--surface);color:var(--muted)}
+.placar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 10px}
+.placar div{background:var(--soft);border-radius:10px;padding:7px 8px;text-align:center}
+.placar b{display:block;font-family:var(--mono);font-size:.95rem}
+.placar span{font-size:.66rem;color:var(--muted)}
+.regras-c{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:4px;font-size:.78rem}
+.regras-c li{display:flex;justify-content:space-between;gap:8px;background:var(--soft);border-radius:8px;padding:6px 9px}
+.regras-c .off{color:var(--muted);text-decoration:line-through}
+.ult-c{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:.76rem}
+.ult-c li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:4px 2px;border-bottom:1px solid var(--line, var(--soft))}
+details.mais-c summary{cursor:pointer;font-size:.82rem;font-weight:600;margin:6px 0}
 .oplista .ganho{font-family:var(--mono);font-size:.86rem;font-weight:700;text-align:right}
 .clima{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
 .clima div{background:var(--soft);border-radius:10px;padding:7px 8px;text-align:center}
@@ -250,6 +261,8 @@ footer a{color:inherit}
   <div class="lista-leg" id="listaLeg"></div>
 
   <section class="card" id="cardPreco"><div class="skel"></div></section>
+
+  <section class="card" id="cardCurto"><h2>⚡ Curto prazo (gráfico de 1 hora)</h2><div class="skel" style="height:90px"></div></section>
 
   <section class="card" id="cardOport"><h2>Melhores para comprar e vender agora</h2><div class="skel" style="height:90px"></div></section>
 
@@ -300,7 +313,7 @@ footer a{color:inherit}
 import { analisar, series } from "./analise.js";
 import { situacao } from "./setups.js";
 
-const APP_VERSAO = "12";
+const APP_VERSAO = "13";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -831,6 +844,41 @@ function renderMercado(){
   $("cardMercado").querySelectorAll("[data-a]").forEach(b => b.onclick = () => { aba = b.dataset.a; store.set("aba", aba); renderMercado(); });
   $("cardMercado").querySelectorAll("[data-s]").forEach(b => b.onclick = () => { const s = b.dataset.s; addLista(s); escolher(s); scrollTo({ top: 0, behavior: "smooth" }); });
 }
+// ---------- curto prazo: gráfico de 1 hora, refeito no servidor a cada hora fechada
+let curto = null;
+async function carregarCurto(){
+  try { const r = await fetch(`${CONFIG.fn}?acao=curto`, { signal: AbortSignal.timeout(90000) }); const d = await r.json(); if (d.erro) throw 0; curto = d; renderCurto(); }
+  catch (e) { if (!curto) $("cardCurto").innerHTML = `<h2>⚡ Curto prazo (gráfico de 1 hora)</h2><p class="small muted">Não foi possível calcular agora. Tente atualizar em alguns minutos.</p>`; }
+}
+function renderCurto(){
+  const el = $("cardCurto"), d = curto; if (!d) return;
+  const reais = v => usdBrl ? `<br>${fBRL(v * usdBrl)}` : "";
+  const hora = t => new Date(t).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+  const motivoB = { regra:"regra sem resultado bom agora", mercado:"esperando o BTC voltar a subir", moeda:"não pagou nesta moeda", subiu:"já subiu demais desde o sinal" };
+  const P = d.placar || {};
+  const item = (x, i) => `<li><button data-s="${x.s}">
+      <span class="pos">${i + 1}º</span>
+      <span><b>${esc(x.b)}</b><span class="est ${x.estado}">${x.estado === "comprar" ? "COMPRAR AGORA" : "OBSERVAR"}</span><br><span class="small muted">${esc(x.regra)} · desde ${hora(x.desde)}${x.bloqueio ? ` · ${motivoB[x.bloqueio]}` : ""}</span></span>
+      <span class="ganho ${x.esperado > 0 ? "up" : "down"}">${x.esperado > 0 ? "+" : ""}${(x.esperado * 100).toFixed(1).replace(".", ",")}%<br><span class="small muted" style="font-weight:400">esperado</span></span>
+      <span class="mot">${esc(x.txt)}${x.opsMoeda >= 3 ? ` Nesta moeda: ${x.opsMoeda} operações, acertou ${pc(x.acertoMoeda)}.` : ""} Venda tudo no alvo ou depois de ${x.prazo} h, o que vier primeiro.</span>
+      <span class="num3"><span>Entrada<b>${fP(x.entrada)}</b>${reais(x.entrada)}</span><span>Stop (${pr(-x.risco)})<b class="down">${fP(x.stop)}</b>${reais(x.stop)}</span><span>Alvo (${pr(x.kAlvo * x.risco)})<b class="up">${fP(x.alvo)}</b>${reais(x.alvo)}</span></span>
+    </button></li>`;
+  const compra = d.compra || [], obs = d.observar || [];
+  const ativas = (d.regras || []).filter(r => r.ativa);
+  el.innerHTML = `<h2>⚡ Curto prazo (gráfico de 1 hora)</h2>
+    <p class="small" style="margin:-4px 0 6px"><b class="${d.mercado?.ok ? "up" : d.mercado?.ok === false ? "down" : ""}">${esc(d.mercado?.txt || "")}</b></p>
+    <p class="small muted" style="margin:0 0 4px">Se tivesse seguido todos os avisos de curto prazo dos últimos ~${P.dias || 0} dias:</p>
+    <div class="placar"><div><b>${P.ops || 0}</b><span>operações (${(P.porDia || 0).toFixed(1).replace(".", ",")}/dia)</span></div><div><b>${pc(P.acerto)}</b><span>acertaram</span></div><div><b class="${(P.carteira || 0) >= 0 ? "up" : "down"}">${pr(P.carteira || 0)}</b><span>no capital, arriscando 1% cada</span></div></div>
+    <ul class="mlista oplista">${compra.length ? compra.map(item).join("") : `<li class="small muted">Nenhum sinal de curto prazo que esteja pagando, nesta hora. ${ativas.length ? "O radar refaz a conta a cada hora fechada; com os alertas ligados, o aviso chega no celular." : "Nenhuma regra está dando lucro no gráfico de 1 hora agora: o melhor é ficar de fora."}</li>`}</ul>
+    ${obs.length ? `<details class="mais-c"><summary>Sinais que o radar barrou · ${obs.length}</summary><ul class="mlista oplista">${obs.map(item).join("")}</ul></details>` : ""}
+    <details class="mais-c"><summary>Como cada regra está indo no gráfico de 1 hora</summary>
+      <ul class="regras-c">${(d.regras || []).map(r => `<li><span class="${r.ativa ? "" : "off"}">${esc(r.nome)}</span><span>${r.ops} op · ${pc(r.acerto)} · ${(r.mediaR >= 0 ? "+" : "") + r.mediaR.toFixed(2).replace(".", ",")} R${r.filtro ? " · só com BTC em alta" : ""}${r.ativa ? "" : " · desligada"}</span></li>`).join("")}</ul>
+      <p class="small muted" style="margin:0">R é o ganho dividido pelo risco (distância até o stop). +0,30 R por operação, arriscando 1% do capital, dá cerca de +0,3% por operação. Alvo e prazo de cada regra são escolhidos pelo próprio teste.</p></details>
+    ${d.ultimos?.length ? `<details class="mais-c"><summary>Últimos sinais e como terminaram</summary><ul class="ult-c">${d.ultimos.map(t => `<li><span>${hora(t.t)}</span><span><b>${esc(t.b)}</b> · ${t.motivo === "alvo" ? "bateu o alvo" : t.motivo === "stop" ? "bateu o stop" : "prazo acabou"}</span><span class="${t.ret >= 0 ? "up" : "down"}">${pr(t.ret)}</span></li>`).join("")}</ul></details>` : ""}
+    <p class="aviso-leg">${d.moedas} moedas com mais volume na Binance, ~80 dias de velas de 1 hora, com 0,15% de custo em cada compra e venda · ${new Date(d.atualizado).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" })}. É o resultado do passado recente, não garantia: muitas operações perdem, e o ganho vem das que batem o alvo. Use sempre o stop e não arrisque mais de 1% do capital por operação. Queda máxima no teste: ${pr(-(P.quedaMax || 0))}.</p>`;
+  el.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { const s = b.dataset.s; addLista(s); escolher(s); scrollTo({ top: 0, behavior: "smooth" }); });
+}
+
 // ---------- melhores para comprar e vender (vem junto com a varredura do mercado)
 let abaOp = store.get("abaOp", "compra");
 function renderOport(){
@@ -956,6 +1004,7 @@ async function iniciar(){
   const u = new URLSearchParams(location.search).get("par");
   if (u && /^[A-Z0-9]{5,20}$/.test(u)) { if (!lista.includes(u)) { lista.push(u); store.set("lista", lista); } par = u; }
   carregarComentario(); carregarMercado(); setInterval(carregarMercado, 15 * 60000);
+  carregarCurto(); setInterval(carregarCurto, 5 * 60000);
   await Promise.all([escolher(par), medoGanancia()]);
   renderAnalise();
   setInterval(() => carregarTickers().then(() => { renderLista(); renderPreco(); }).catch(() => {}), 60000);
@@ -967,7 +1016,7 @@ $("lnkTema").onclick = e => { e.preventDefault(); const n = document.documentEle
 { const t = store.get("tema"); if (t) document.documentElement.dataset.theme = t; }
 
 // ---------- alertas no celular
-const AUTO = [["compra","🟢 Comprar agora"],["venda","🔴 Vender agora (saída da regra, stop, alvo, realizar lucro, virada para baixa)"],["mercado","🏆 Melhores do mercado inteiro (não só da minha lista)"]];
+const AUTO = [["compra","🟢 Comprar agora"],["venda","🔴 Vender agora (saída da regra, stop, alvo, realizar lucro, virada para baixa)"],["mercado","🏆 Melhores do mercado inteiro (não só da minha lista)"],["curto","⚡ Curto prazo (gráfico de 1 hora): compra, alvo, stop e prazo"]];
 function b64(s){ const p = "=".repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); }
 async function inscricao(){ if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
 async function rpc(fn, body){
@@ -977,6 +1026,7 @@ async function rpc(fn, body){
 let alertas = store.get("alertas", []);   // {id, par, tipo: "acima"|"abaixo", valor}
 let prefs = store.get("prefs", { auto: { compra:true, venda:true, mercado:true }, tfs: ["4h","1d"] });
 if (prefs.auto && prefs.auto.mercado === undefined) { prefs.auto.mercado = true; store.set("prefs", prefs); }
+if (prefs.auto && prefs.auto.curto === undefined) { prefs.auto.curto = true; store.set("prefs", prefs); }
 // versão antiga tinha vários sinais técnicos; agora só compra e venda
 if (prefs.auto.compra === undefined) { const e = prefs.auto.entrada !== false; prefs.auto = { compra: e, venda: e }; store.set("prefs", prefs); setTimeout(() => salvarServidor().catch(() => {}), 3000); }
 async function salvarServidor(){
