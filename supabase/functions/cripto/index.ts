@@ -38,12 +38,22 @@ async function vapid() {
   const E = Object.fromEntries((data ?? []).map((x: J) => [x.chave, x.valor]));
   webpush.setVapidDetails("mailto:radar-cripto@users.noreply.github.com", E.vapid_public, E.vapid_private);
 }
-async function enviar(s: J, payload: J) {
+// Diagnóstico da rodada (volta na resposta e fica guardado em "estado" para o app mostrar)
+const diag: J = { falhasEnvio: 0, erros: [] as string[] };
+// Venda (stop, alvo, prazo) vale por 12 h: se o celular estiver sem internet, chega quando voltar.
+// Compra vale 45 min: depois disso o preço já mudou e o aviso deixa de servir.
+async function enviar(s: J, payload: J, tentativa = 0): Promise<boolean> {
+  const venda = /VENDER/.test(String(payload.title ?? ""));
+  const ttl = payload.tag === "teste" ? 600 : venda ? 12 * 3600 : 45 * 60;
   try {
-    await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: 1800, urgency: "high" });
+    await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: ttl, urgency: "high" });
     return true;
   } catch (e: any) {
-    if (e?.statusCode === 404 || e?.statusCode === 410) await db.from("cripto_inscricoes").delete().eq("endpoint", s.endpoint);
+    const st = e?.statusCode;
+    if (st === 404 || st === 410) { await db.from("cripto_inscricoes").delete().eq("endpoint", s.endpoint); diag.erros.push(`inscrição expirada removida (${st})`); return false; }
+    // falha passageira do serviço de push: tenta de novo uma vez na hora
+    if (tentativa === 0 && (!st || st === 429 || st >= 500)) { await new Promise((r) => setTimeout(r, 1500)); return enviar(s, payload, 1); }
+    diag.falhasEnvio++; diag.erros.push(`push ${st ?? "sem resposta"}: ${String(e?.body ?? e?.message ?? "").slice(0, 80)}`);
     return false;
   }
 }
@@ -152,11 +162,11 @@ async function radarCurto(soCache = false) {
   const horaFechada = Math.floor((Date.now() - 90e3) / 36e5) * 36e5 + 90e3;
   if (c?.dados && (soCache || Date.parse(c.criado) >= horaFechada)) return { ...c.dados, cache: true };
   const todos = await binance("/api/v3/ticker/24hr");
-  const uni = filtrarUniverso(todos ?? [], 50).filter((t: J) => t.volQ >= 1e7);
+  const uni = filtrarUniverso(todos ?? [], 50).filter((t: J) => t.volQ >= 5e6);
   const kBtc = await klines1h("BTCUSDT");
   if (!kBtc) throw new Error("sem dados do BTC");
   const regime = regimeBTC(kBtc);
-  const moedas: J[] = [];
+  const moedas: (J | null)[] = [];
   const falhas: J[] = [];
   const um = async (t: J) => {
     try { const k = t.s === "BTCUSDT" ? kBtc : await klines1h(t.s); if (!k) { falhas.push(t); return null; } return medirMoeda(t, k); }
@@ -180,10 +190,11 @@ async function avisosMercado(subs: J[]) {
   if (!ativos.length) return 0;
   const min = new Date().getUTCMinutes();
   const varrer = min % 15 < 2;                 // ranking completo a cada 15 min; stop/alvo das compras a cada 2 min
-  const m: J | null = varrer ? await radarMercado().catch(() => null) : null;
+  const m: J | null = varrer ? await radarMercado().catch((e: any) => { diag.erros.push("varredura diária: " + String(e?.message ?? e).slice(0, 120)); return null; }) : null;
   const ops: J = m?.oportunidades ?? {};
   // curto prazo: recalcula na rodada sem varredura diária (para não pesar), senão usa o guardado
-  const curtoD: J | null = ativos.some((s: J) => quer(s, "curto")) ? await radarCurto(varrer).catch(() => null) : null;
+  const curtoD: J | null = ativos.some((s: J) => quer(s, "curto")) ? await radarCurto(varrer).catch((e: any) => { diag.erros.push("curto prazo: " + String(e?.message ?? e).slice(0, 120)); return null; }) : null;
+  if (curtoD) diag.curto = { atualizado: curtoD.atualizado, compra: (curtoD.compra ?? []).length };
   // compras já avisadas a cada celular (para acompanhar stop, alvo e saída)
   const { data: compras } = await db.from("cripto_enviados").select("endpoint,chave,quando").like("chave", "opc:%").gte("quando", new Date(Date.now() - 90 * 864e5).toISOString());
   const abertas: Record<string, J[]> = {};
@@ -268,6 +279,14 @@ async function avisosMercado(subs: J[]) {
 }
 
 async function rodar() {
+  diag.falhasEnvio = 0; diag.erros = []; delete diag.avisosMercado; delete diag.curto;
+  const r: J = await rodarDentro();
+  const res = { ...r, ...diag, quando: new Date().toISOString() };
+  // batimento do robô: o app mostra "última verificação há X min"
+  await db.from("estado").upsert({ chave: "cripto_rodada", valor: JSON.stringify(res) }).then(() => {}, () => {});
+  return res;
+}
+async function rodarDentro() {
   const { data: subs } = await db.from("cripto_inscricoes").select("*");
   if (!subs?.length) return { inscricoes: 0 };
   await vapid();
@@ -295,7 +314,7 @@ async function rodar() {
 
   // 2) MELHORES DO MERCADO: "COMPRAR AGORA" nas 80 maiores moedas e "VENDER AGORA" nas que a pessoa
   //    tem na lista ou recebeu aviso de compra (para não perder a saída de nenhuma compra avisada).
-  try { enviados += await avisosMercado(subs); } catch (_) { /* não derruba o resto */ }
+  try { const n = await avisosMercado(subs); enviados += n; diag.avisosMercado = n; } catch (e: any) { diag.erros.push("avisos do mercado: " + String(e?.message ?? e).slice(0, 120)); }
 
   // 2) momentos de COMPRA e de VENDA nas moedas da lista (a cada 15 minutos)
   const min = new Date().getUTCMinutes();
@@ -410,6 +429,25 @@ Deno.serve(async (req: Request) => {
   }
   const corpo = await req.json().catch(() => ({}));
   try {
+    // situação dos avisos deste celular (só responde sobre o próprio endpoint)
+    if (corpo.acao === "status") {
+      const ep = String(corpo.endpoint || "");
+      const { data: s } = await db.from("cripto_inscricoes").select("endpoint").eq("endpoint", ep).maybeSingle();
+      const { data: est } = await db.from("estado").select("valor").eq("chave", "cripto_rodada").maybeSingle();
+      const { data: ult } = await db.from("cripto_enviados").select("chave,quando").eq("endpoint", ep).order("quando", { ascending: false }).limit(1);
+      let rod: J = {}; try { rod = JSON.parse(est?.valor ?? "{}"); } catch (_) { /* vazio */ }
+      return resp({ inscrito: !!s, ultimaRodada: rod.quando ?? null, problemas: (rod.erros ?? []).length, ultimoAviso: ult?.[0] ? { quando: ult[0].quando, moeda: base(String(ult[0].chave).split(":")[1] ?? "") } : null });
+    }
+    // o navegador trocou a inscrição de push sozinho: atualiza sem perder lista, alertas e compras acompanhadas
+    if (corpo.acao === "trocar") {
+      const antigo = String(corpo.antigo || ""), novo = corpo.novo ?? {};
+      if (!antigo || !/^https:\/\//.test(String(novo.endpoint || "")) || !novo.keys?.p256dh || !novo.keys?.auth) return resp({ ok: false }, 400);
+      const { data: s } = await db.from("cripto_inscricoes").select("endpoint").eq("endpoint", antigo).maybeSingle();
+      if (!s) return resp({ ok: false, erro: "inscrição antiga não encontrada" }, 404);
+      await db.from("cripto_inscricoes").update({ endpoint: novo.endpoint, p256dh: novo.keys.p256dh, auth: novo.keys.auth }).eq("endpoint", antigo);
+      await db.from("cripto_enviados").update({ endpoint: novo.endpoint }).eq("endpoint", antigo);
+      return resp({ ok: true });
+    }
     if (corpo.acao === "teste") {
       const { data: s } = await db.from("cripto_inscricoes").select("*").eq("endpoint", String(corpo.endpoint || "")).maybeSingle();
       if (!s) return resp({ ok: false, erro: "inscrição não encontrada" }, 404);

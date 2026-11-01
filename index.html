@@ -313,7 +313,7 @@ footer a{color:inherit}
 import { analisar, series } from "./analise.js";
 import { situacao } from "./setups.js";
 
-const APP_VERSAO = "13";
+const APP_VERSAO = "14";
 const CONFIG = {
   fn: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/functions/v1/cripto",
   rest: "https://xgwdrrxbqopsfhjgkvdq.supabase.co/rest/v1/rpc/",
@@ -1038,6 +1038,21 @@ async function sincronizarAlertas(){
   const s = await inscricao().catch(() => null); if (!s) return;
   try { const r = await rpc("cripto_meus_alertas", { p_endpoint: s.endpoint }); if (Array.isArray(r)) { alertas = r; store.set("alertas", alertas); } } catch (e) {}
 }
+// Confere com o servidor se ESTE celular está inscrito e se o robô está rodando.
+// Se o servidor tiver perdido a inscrição, inscreve de novo na hora (sem perder lista nem alertas).
+async function conferirAvisos(sub){
+  const el = $("aSaude"); if (!el || !sub) return;
+  const status = () => fetch(CONFIG.fn, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ acao:"status", endpoint: sub.endpoint }) }).then(r => r.json());
+  try {
+    let st = await status();
+    if (!st.inscrito) { await salvarServidor(); st = await status(); }
+    const min = st.ultimaRodada ? Math.round((Date.now() - Date.parse(st.ultimaRodada)) / 60000) : null;
+    const robo = min == null ? "sem registro do robô ainda" : min <= 6 ? `robô conferiu o mercado há ${min <= 1 ? "1 minuto" : min + " minutos"}` : `⚠️ robô sem rodar há ${min} minutos`;
+    const ult = st.ultimoAviso ? ` · último aviso: ${st.ultimoAviso.moeda} em ${new Date(st.ultimoAviso.quando).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })}` : "";
+    const ok = st.inscrito && min != null && min <= 6 && Notification.permission === "granted";
+    el.innerHTML = `${ok ? "✅ <b>Avisos funcionando neste celular</b>" : "⚠️ <b>Atenção aos avisos deste celular</b>"}<br><span class="muted">${st.inscrito ? "Inscrito no servidor" : "Não foi possível inscrever no servidor"} · ${robo}${ult}${st.problemas ? ` · ${st.problemas} problema(s) na última rodada` : ""}.</span>`;
+  } catch (e) { el.innerHTML = `⚠️ Não foi possível conferir os avisos agora (sem internet?).`; }
+}
 async function renderAlertas(){
   const el = $("alertasCorpo");
   const suporta = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -1058,7 +1073,8 @@ async function renderAlertas(){
     return;
   }
   const meus = alertas.filter(a => a.par === par);
-  el.innerHTML = `
+  el.innerHTML = `<div id="aSaude" class="small" style="margin:0 0 12px;padding:8px 10px;border-radius:10px;background:var(--soft)">Conferindo os avisos deste celular…</div>
+    ${Notification.permission !== "granted" ? `<p class="nota ruim small">As notificações estão bloqueadas neste celular. Libere em Configurações → Apps → Chrome (ou Radar Cripto) → Notificações.</p>` : ""}
     <p class="eyebrow" style="margin:0">Alerta de preço · ${base(par)}</p>
     <div class="form"><select id="aTipo"><option value="acima">Subir acima de</option><option value="abaixo">Cair abaixo de</option></select>
       <input id="aValor" type="number" inputmode="decimal" step="any" placeholder="${t ? fP(t.p).replace(/\./g, "").replace(",", ".") : "preço"}"><button class="btn" id="aAdd">Criar</button></div>
@@ -1081,6 +1097,7 @@ async function renderAlertas(){
   el.querySelectorAll("[data-a]").forEach(c => c.onchange = async () => { prefs.auto[c.dataset.a] = c.checked; store.set("prefs", prefs); try { await salvarServidor(); toast("Salvo."); } catch (e) { toast("Não salvou."); } });
   el.querySelectorAll("[data-t]").forEach(c => c.onchange = async () => { prefs.tfs = c.checked ? [...new Set([...prefs.tfs, c.dataset.t])] : prefs.tfs.filter(x => x !== c.dataset.t); store.set("prefs", prefs); try { await salvarServidor(); toast("Salvo."); } catch (e) { toast("Não salvou."); } });
   $("aTeste").onclick = async () => { try { const r = await (await fetch(CONFIG.fn, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ acao:"teste", endpoint: sub.endpoint }) })).json(); toast(r.ok ? "Teste enviado." : "Falhou: " + (r.erro || "")); } catch (e) { toast("Falhou: " + e.message); } };
+  conferirAvisos(sub);
   $("aDesligar").onclick = async () => { await rpc("cripto_remover", { p_endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe(); toast("Alertas desligados."); renderAlertas(); };
 }
 
