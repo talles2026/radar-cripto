@@ -157,10 +157,14 @@ async function radarCurto(soCache = false) {
   if (!kBtc) throw new Error("sem dados do BTC");
   const regime = regimeBTC(kBtc);
   const moedas: J[] = [];
+  const falhas: J[] = [];
   const um = async (t: J) => {
-    try { const k = t.s === "BTCUSDT" ? kBtc : await klines1h(t.s); return k ? medirMoeda(t, k) : null; } catch (_) { return null; }
+    try { const k = t.s === "BTCUSDT" ? kBtc : await klines1h(t.s); if (!k) { falhas.push(t); return null; } return medirMoeda(t, k); }
+    catch (_) { falhas.push(t); return null; }
   };
-  for (let i = 0; i < uni.length; i += 8) moedas.push(...await Promise.all(uni.slice(i, i + 8).map(um)));
+  for (let i = 0; i < uni.length; i += 5) moedas.push(...await Promise.all(uni.slice(i, i + 5).map(um)));
+  // segunda tentativa, uma por vez, para as que falharam
+  for (const t of falhas.splice(0)) moedas.push(await um(t));
   const out: J = montarCurto(moedas, regime);
   if (out.moedas >= 20) await db.from("cripto_estat").upsert({ par: "*", tf: "scan1h", dados: out, criado: out.atualizado });
   return out;
