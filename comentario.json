@@ -1,38 +1,38 @@
 {
- "data": "2026-10-31T10:43:35Z",
- "titulo": "BTC perto de US$ 77 mil com saída recorde dos ETFs",
- "texto": "O bitcoin seguiu pressionado no sábado (31/10) e era negociado perto de US$ 77,4 mil, depois de tocar US$ 76,3 mil, ainda sob o efeito do ataque de US$ 6,3 bilhões à Binance; os saques na corretora seguem pausados e a Binance diz ter separado mais de US$ 6,34 bilhões próprios para cobrir as perdas. Na sexta (30/10), os ETFs de bitcoin nos EUA tiveram saída de US$ 643 milhões, a maior em um dia desde junho, e os de ether perderam US$ 156 milhões, interrompendo quatro dias de entrada nos fundos de BTC. Em 24 horas, cerca de US$ 398 milhões em posições alavancadas foram liquidadas, quase 77% delas apostas na alta, num clima de cautela reforçado pelo Fed, que manteve os juros em 3,75%–4% com dois votos a favor de subir. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-01T10:49:01Z",
+ "titulo": "BTC volta a US$ 78 mil e Binance reabre saques",
+ "texto": "O bitcoin subiu cerca de 0,9% em 24 horas e era negociado perto de US$ 78 mil no domingo (1/11), enquanto o ether ia a cerca de US$ 2.270, com alta de 1,2%. O alívio veio da Binance, que reabriu os saques em etapas, começando pelo bitcoin, e diz ter reposto cerca de 95% dos ativos levados no ataque de US$ 6,3 bilhões. O clima ainda é de cautela: o BTC caiu perto de 3% na semana, não conseguiu passar dos US$ 80 mil e os ETFs de bitcoin nos EUA perderam US$ 643 milhões na sexta (30/10), com saída de cerca de US$ 516 milhões no mês de outubro. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Binance: a corretora pretende reabrir os saques em etapas a partir de domingo (1/11), após checagens de segurança; o resultado da prova de reservas é esperado para segunda (2/11).",
-  "Fechamento mensal hoje (31/10): o preço médio de compra do BTC dos ETFs americanos é estimado pela Glassnode em US$ 81,5 mil, acima do preço atual.",
-  "ETFs: veja se a saída de sexta continua na segunda ou se volta a entrada; os ETFs de ether já perderam cerca de US$ 1,6 bilhão em outubro.",
-  "EUA: relatório de emprego (payroll) previsto para sexta (6/11); a próxima reunião do Fed é em 8 e 9/12, com novas projeções de juros.",
-  "Fundos congelados: parceiros travaram cerca de US$ 3 bilhões do ataque; novidades sobre devolução podem acalmar o mercado."
+  "Binance: a primeira fase reabre saques em 15 redes (Bitcoin, Ethereum, BNB Chain, Tron, Solana, XRP e outras); antes de sacar, confira no app se a sua rede já está liberada. A segunda fase ainda não tem data.",
+  "Prova de reservas completa da Binance prevista para terça (3/11).",
+  "Eleições de meio de mandato nos EUA na terça (3/11): o resultado pode afetar o andamento do CLARITY Act, a lei de regras para o mercado cripto.",
+  "ETFs: veja se a saída de sexta continua na segunda (2/11); os ETFs de ether tiveram saída em todos os dias da última semana (cerca de US$ 431 milhões).",
+  "Juros: o Fed manteve a taxa em 3,75%–4% e a próxima decisão é em 9/12; os dados de emprego e inflação de outubro saem depois das eleições."
  ],
  "fontes": [
+  {
+   "nome": "crypto.news – BTC perto de US$ 78 mil (1/11)",
+   "url": "https://crypto.news/crypto-prices-today-bitcoin-78k-lit-altcoin-gainers"
+  },
+  {
+   "nome": "crypto.news – Binance reabre saques de bitcoin (1/11)",
+   "url": "https://crypto.news/binance-reopens-bitcoin-withdrawals-after-hack/"
+  },
+  {
+   "nome": "CryptoTicker – redes da primeira fase de saques (1/11)",
+   "url": "https://cryptoticker.io/en/binance-withdrawals-reopen-phase-one/"
+  },
   {
    "nome": "crypto.news – ETFs perdem US$ 643 milhões (31/10)",
    "url": "https://crypto.news/bitcoin-etfs-643-million-outflows-october-30/"
   },
   {
-   "nome": "CoinCentral – linha do tempo do ataque à Binance (31/10)",
-   "url": "https://coincentral.com/binance-hack-timeline-from-6-3-billion-theft-to-sunday-reopening-plan"
+   "nome": "Crypto.com – o que observar em novembro",
+   "url": "https://crypto.com/en/market-updates/best-crypto-november-2026"
   },
   {
-   "nome": "CoinDesk – Binance separa US$ 6,34 bilhões (30/10)",
-   "url": "https://www.coindesk.com/business/2026/10/30/binance-arranges-usd6-34-billion-to-cover-losses-from-record-crypto-hack"
-  },
-  {
-   "nome": "CoinCentral – liquidações de US$ 400 milhões (31/10)",
-   "url": "https://coincentral.com/crypto-liquidations-reach-400-million-as-binance-hack-pressures-bitcoin-ethereum-and-solana"
-  },
-  {
-   "nome": "CryptoTicker – Fed mantém juros, dois pedem alta (28/10)",
-   "url": "https://cryptoticker.io/en/fed-rate-pause-dissent-hike/"
-  },
-  {
-   "nome": "CalendarX – relatório de emprego dos EUA",
-   "url": "https://www.calendarx.com/events/jobs-report-november-2026"
+   "nome": "The Crypto Times – Fed mantém juros em 3,75%–4% (29/10)",
+   "url": "https://www.cryptotimes.io/2026/10/29/fomc-rate-decision-fed-holds-rates-at-3-75-4-in-10-2-vote/"
   }
  ]
 }
