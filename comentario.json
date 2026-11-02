@@ -1,38 +1,26 @@
 {
- "data": "2026-11-01T10:49:01Z",
- "titulo": "BTC volta a US$ 78 mil e Binance reabre saques",
- "texto": "O bitcoin subiu cerca de 0,9% em 24 horas e era negociado perto de US$ 78 mil no domingo (1/11), enquanto o ether ia a cerca de US$ 2.270, com alta de 1,2%. O alívio veio da Binance, que reabriu os saques em etapas, começando pelo bitcoin, e diz ter reposto cerca de 95% dos ativos levados no ataque de US$ 6,3 bilhões. O clima ainda é de cautela: o BTC caiu perto de 3% na semana, não conseguiu passar dos US$ 80 mil e os ETFs de bitcoin nos EUA perderam US$ 643 milhões na sexta (30/10), com saída de cerca de US$ 516 milhões no mês de outubro. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-02T10:43:25Z",
+ "titulo": "BTC estável perto de US$ 78 mil antes das eleições nos EUA",
+ "texto": "O bitcoin começou a segunda-feira (2/11) perto de US$ 78 mil, praticamente estável em 24 horas, e o ether ficou em torno de US$ 2.280–2.300. O mercado segue se recuperando do ataque de US$ 6,3 bilhões à Binance: os saques foram reabertos no domingo, os clientes retiraram em termos líquidos cerca de US$ 3,6 bilhões no primeiro dia e a corretora diz ter reposto cerca de 95% do que foi levado. O clima ainda é de cautela, com o índice de medo e ganância em 37 (medo) e os ETFs de bitcoin e ether nos EUA com saídas de US$ 643 milhões e US$ 156 milhões na sexta (30/10). A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Binance: a primeira fase reabre saques em 15 redes (Bitcoin, Ethereum, BNB Chain, Tron, Solana, XRP e outras); antes de sacar, confira no app se a sua rede já está liberada. A segunda fase ainda não tem data.",
-  "Prova de reservas completa da Binance prevista para terça (3/11).",
-  "Eleições de meio de mandato nos EUA na terça (3/11): o resultado pode afetar o andamento do CLARITY Act, a lei de regras para o mercado cripto.",
-  "ETFs: veja se a saída de sexta continua na segunda (2/11); os ETFs de ether tiveram saída em todos os dias da última semana (cerca de US$ 431 milhões).",
-  "Juros: o Fed manteve a taxa em 3,75%–4% e a próxima decisão é em 9/12; os dados de emprego e inflação de outubro saem depois das eleições."
+  "Eleições de meio de mandato nos EUA na terça (3/11): o controle do Congresso pode mudar o rumo das leis para o mercado cripto.",
+  "Emprego nos EUA: vagas abertas (JOLTS) na terça (3/11) e relatório de empregos de outubro (payroll) na sexta (6/11), às 10h30 de Brasília; a expectativa é de cerca de 62 mil vagas e desemprego perto de 4,2%.",
+  "Juros: o Fed manteve a taxa em 3,75%–4% em 28/10, mas dois dirigentes defenderam alta; falas de membros do Fed podem mexer com o mercado.",
+  "Binance: acompanhe se os saques seguem normais e a divulgação da prova de reservas; problemas aqui podem pesar no preço.",
+  "Desbloqueios de tokens: Ethena (ENA) em 5/11 e Hyperliquid (HYPE) em 6/11, ambos pequenos em relação ao total em circulação."
  ],
  "fontes": [
   {
-   "nome": "crypto.news – BTC perto de US$ 78 mil (1/11)",
-   "url": "https://crypto.news/crypto-prices-today-bitcoin-78k-lit-altcoin-gainers"
+   "nome": "CoinDesk – Crypto Week Ahead (2/11)",
+   "url": "https://www.coindesk.com/markets/2026/11/02/binance-hack-fallout-u-s-midterms-and-jobs-report-crypto-week-ahead"
   },
   {
-   "nome": "crypto.news – Binance reabre saques de bitcoin (1/11)",
-   "url": "https://crypto.news/binance-reopens-bitcoin-withdrawals-after-hack/"
+   "nome": "The Block – ETFs de bitcoin têm maior saída em 4 meses (1/11)",
+   "url": "https://www.theblock.co/news/markets/2026-11-01-spot-bitcoin-etfs-largest-four-months-following-binance-hack-432270"
   },
   {
-   "nome": "CryptoTicker – redes da primeira fase de saques (1/11)",
-   "url": "https://cryptoticker.io/en/binance-withdrawals-reopen-phase-one/"
-  },
-  {
-   "nome": "crypto.news – ETFs perdem US$ 643 milhões (31/10)",
-   "url": "https://crypto.news/bitcoin-etfs-643-million-outflows-october-30/"
-  },
-  {
-   "nome": "Crypto.com – o que observar em novembro",
-   "url": "https://crypto.com/en/market-updates/best-crypto-november-2026"
-  },
-  {
-   "nome": "The Crypto Times – Fed mantém juros em 3,75%–4% (29/10)",
-   "url": "https://www.cryptotimes.io/2026/10/29/fomc-rate-decision-fed-holds-rates-at-3-75-4-in-10-2-vote/"
+   "nome": "crypto.news – 4 eventos para observar na semana (2/11)",
+   "url": "https://crypto.news/crypto-week-ahead-bitcoin-us-midterms-jobs-data-fed/"
   }
  ]
 }
