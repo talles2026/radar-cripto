@@ -1,26 +1,18 @@
 {
- "data": "2026-11-02T10:43:25Z",
- "titulo": "BTC estável perto de US$ 78 mil antes das eleições nos EUA",
- "texto": "O bitcoin começou a segunda-feira (2/11) perto de US$ 78 mil, praticamente estável em 24 horas, e o ether ficou em torno de US$ 2.280–2.300. O mercado segue se recuperando do ataque de US$ 6,3 bilhões à Binance: os saques foram reabertos no domingo, os clientes retiraram em termos líquidos cerca de US$ 3,6 bilhões no primeiro dia e a corretora diz ter reposto cerca de 95% do que foi levado. O clima ainda é de cautela, com o índice de medo e ganância em 37 (medo) e os ETFs de bitcoin e ether nos EUA com saídas de US$ 643 milhões e US$ 156 milhões na sexta (30/10). A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-11T10:40:00Z",
+ "titulo": "Inflação alta nos EUA derruba BTC para perto de US$ 73 mil",
+ "texto": "O bitcoin caiu abaixo de US$ 73 mil na terça (10/11), chegando a US$ 72.727 na Binance, e nesta quarta está perto de US$ 73,8 mil; o ether chegou a encostar em US$ 2.000. O motivo principal foi a inflação dos EUA de outubro acima do esperado (alta de 0,4% no mês, contra 0,3% previsto), que fez o diretor do Fed Christopher Waller falar até em subir os juros em 0,5 ponto em dezembro. O clima é de medo: o índice de medo e ganância está em 29 e os ETFs de bitcoin nos EUA seguem com saídas, de US$ 95 milhões na terça e cerca de US$ 969 milhões em cinco pregões. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Eleições de meio de mandato nos EUA na terça (3/11): o controle do Congresso pode mudar o rumo das leis para o mercado cripto.",
-  "Emprego nos EUA: vagas abertas (JOLTS) na terça (3/11) e relatório de empregos de outubro (payroll) na sexta (6/11), às 10h30 de Brasília; a expectativa é de cerca de 62 mil vagas e desemprego perto de 4,2%.",
-  "Juros: o Fed manteve a taxa em 3,75%–4% em 28/10, mas dois dirigentes defenderam alta; falas de membros do Fed podem mexer com o mercado.",
-  "Binance: acompanhe se os saques seguem normais e a divulgação da prova de reservas; problemas aqui podem pesar no preço.",
-  "Desbloqueios de tokens: Ethena (ENA) em 5/11 e Hyperliquid (HYPE) em 6/11, ambos pequenos em relação ao total em circulação."
+  "Inflação ao produtor nos EUA (PPI) na sexta (13/11): outro número alto pode reforçar as apostas de alta de juros.",
+  "Juros: a próxima reunião do Fed é em 8 e 9/12; o mercado precifica alta de 0,25 ponto como mais provável, mas cresceu a chance de 0,5 ponto. Falas de dirigentes do Fed podem mexer com o preço.",
+  "ETFs de bitcoin e ether: acompanhe se as saídas diárias continuam ou se voltam as entradas.",
+  "Desbloqueios de tokens previstos para 15 e 16/11 em Starknet (STRK) e Arbitrum (ARB); confirme as datas antes de operar essas moedas.",
+  "Ata da última reunião do Fed em 18/11 e inflação PCE dos EUA em 25/11."
  ],
  "fontes": [
-  {
-   "nome": "CoinDesk – Crypto Week Ahead (2/11)",
-   "url": "https://www.coindesk.com/markets/2026/11/02/binance-hack-fallout-u-s-midterms-and-jobs-report-crypto-week-ahead"
-  },
-  {
-   "nome": "The Block – ETFs de bitcoin têm maior saída em 4 meses (1/11)",
-   "url": "https://www.theblock.co/news/markets/2026-11-01-spot-bitcoin-etfs-largest-four-months-following-binance-hack-432270"
-  },
-  {
-   "nome": "crypto.news – 4 eventos para observar na semana (2/11)",
-   "url": "https://crypto.news/crypto-week-ahead-bitcoin-us-midterms-jobs-data-fed/"
-  }
+  {"nome": "Cointelegraph – Inflação alta nos EUA aumenta temor de alta de juros", "url": "https://cointelegraph.com/news/hot-us-inflation-raises-rate-hike-crypto"},
+  {"nome": "Yahoo Finance/Coinspeaker – Por que o cripto está caindo hoje (11/11)", "url": "https://finance.yahoo.com/markets/crypto/articles/why-crypto-crashing-today-bitcoin-094824873.html"},
+  {"nome": "KuCoin News – Fluxos de ETFs cripto em 10/11", "url": "https://www.kucoin.com/news/flash/crypto-etf-outflows-reach-103-94m-on-november-10"},
+  {"nome": "Analytics Insight – Agenda econômica e cripto de novembro de 2026", "url": "https://www.analyticsinsight.net/cryptocurrency-analytics-insight/november-2026-economic-releases-and-crypto-events-to-watch-us-cpi-fed-minutes-pce-inflation-and-token-unlocks"}
  ]
 }
