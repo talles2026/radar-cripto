@@ -1,18 +1,30 @@
 {
- "data": "2026-11-11T10:40:00Z",
- "titulo": "Inflação alta nos EUA derruba BTC para perto de US$ 73 mil",
- "texto": "O bitcoin caiu abaixo de US$ 73 mil na terça (10/11), chegando a US$ 72.727 na Binance, e nesta quarta está perto de US$ 73,8 mil; o ether chegou a encostar em US$ 2.000. O motivo principal foi a inflação dos EUA de outubro acima do esperado (alta de 0,4% no mês, contra 0,3% previsto), que fez o diretor do Fed Christopher Waller falar até em subir os juros em 0,5 ponto em dezembro. O clima é de medo: o índice de medo e ganância está em 29 e os ETFs de bitcoin nos EUA seguem com saídas, de US$ 95 milhões na terça e cerca de US$ 969 milhões em cinco pregões. A estatística histórica do app não pôde ser consultada nesta atualização; confira os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-12T10:43:02Z",
+ "titulo": "BTC parado perto de US$ 74 mil, com saída forte dos ETFs",
+ "texto": "O bitcoin ficou praticamente estável nas últimas 24 horas, perto de US$ 73,7 mil a US$ 74 mil, mas acumula queda de cerca de 8% na semana; o ether está perto de US$ 2.050. O clima segue de medo (índice de medo e ganância em 28), ainda pesado pela inflação dos EUA acima do esperado, que aumentou as apostas de alta de juros em dezembro. Na quarta (11/11), os ETFs à vista nos EUA tiveram saídas de cerca de US$ 300 milhões em bitcoin e US$ 145 milhões em ether, e analistas notam que ainda há muita alavancagem no mercado. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Inflação ao produtor nos EUA (PPI) na sexta (13/11): outro número alto pode reforçar as apostas de alta de juros.",
-  "Juros: a próxima reunião do Fed é em 8 e 9/12; o mercado precifica alta de 0,25 ponto como mais provável, mas cresceu a chance de 0,5 ponto. Falas de dirigentes do Fed podem mexer com o preço.",
-  "ETFs de bitcoin e ether: acompanhe se as saídas diárias continuam ou se voltam as entradas.",
-  "Desbloqueios de tokens previstos para 15 e 16/11 em Starknet (STRK) e Arbitrum (ARB); confirme as datas antes de operar essas moedas.",
-  "Ata da última reunião do Fed em 18/11 e inflação PCE dos EUA em 25/11."
+  "Hoje (12/11): pedidos de seguro-desemprego nos EUA.",
+  "Sexta (13/11): inflação ao produtor dos EUA (PPI) de outubro; outro número alto pode reforçar as apostas de alta de juros.",
+  "Sábado (14/11): fala do vice-presidente do Fed, Philip Jefferson. Próxima reunião do Fed: 8 e 9/12.",
+  "Desbloqueios de tokens: AZTEC em 13/11 (cerca de 32% da oferta em circulação), STRK e SIGN em 15/11; confirme as datas antes de operar essas moedas.",
+  "ETFs: veja se as saídas diárias continuam; a MSCI vai tirar Strategy e Metaplanet de seus índices após 30/11."
  ],
  "fontes": [
-  {"nome": "Cointelegraph – Inflação alta nos EUA aumenta temor de alta de juros", "url": "https://cointelegraph.com/news/hot-us-inflation-raises-rate-hike-crypto"},
-  {"nome": "Yahoo Finance/Coinspeaker – Por que o cripto está caindo hoje (11/11)", "url": "https://finance.yahoo.com/markets/crypto/articles/why-crypto-crashing-today-bitcoin-094824873.html"},
-  {"nome": "KuCoin News – Fluxos de ETFs cripto em 10/11", "url": "https://www.kucoin.com/news/flash/crypto-etf-outflows-reach-103-94m-on-november-10"},
-  {"nome": "Analytics Insight – Agenda econômica e cripto de novembro de 2026", "url": "https://www.analyticsinsight.net/cryptocurrency-analytics-insight/november-2026-economic-releases-and-crypto-events-to-watch-us-cpi-fed-minutes-pce-inflation-and-token-unlocks"}
+  {
+   "nome": "crypto.news – Bitcoin segura perto de US$ 73.700, mas analistas alertam para mais vendas",
+   "url": "https://crypto.news/bitcoin-price-stuck-73700-leverage-etf-outflows/"
+  },
+  {
+   "nome": "KuCoin – Relatório diário do mercado cripto (12/11/2026)",
+   "url": "https://www.kucoin.com/news/articles/crypto-daily-market-report-november-12-2026"
+  },
+  {
+   "nome": "KuCoin News – ETFs de bitcoin e ether com saídas de US$ 445 milhões em 11/11",
+   "url": "https://www.kucoin.com/news/flash/bitcoin-and-ethereum-etfs-record-445m-in-outflows-on-november-11"
+  },
+  {
+   "nome": "Cointelegraph – Inflação alta nos EUA aumenta temor de alta de juros",
+   "url": "https://cointelegraph.com/news/hot-us-inflation-raises-rate-hike-crypto"
+  }
  ]
 }
