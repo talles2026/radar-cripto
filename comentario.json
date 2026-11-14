@@ -1,30 +1,34 @@
 {
- "data": "2026-11-12T10:43:02Z",
- "titulo": "BTC parado perto de US$ 74 mil, com saída forte dos ETFs",
- "texto": "O bitcoin ficou praticamente estável nas últimas 24 horas, perto de US$ 73,7 mil a US$ 74 mil, mas acumula queda de cerca de 8% na semana; o ether está perto de US$ 2.050. O clima segue de medo (índice de medo e ganância em 28), ainda pesado pela inflação dos EUA acima do esperado, que aumentou as apostas de alta de juros em dezembro. Na quarta (11/11), os ETFs à vista nos EUA tiveram saídas de cerca de US$ 300 milhões em bitcoin e US$ 145 milhões em ether, e analistas notam que ainda há muita alavancagem no mercado. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-14T10:43:59Z",
+ "titulo": "BTC cai abaixo de US$ 67 mil e mercado vai ao medo extremo",
+ "texto": "O bitcoin caiu cerca de 3% em 24 horas e perto de 12% na semana, passando abaixo de US$ 67 mil, o menor nível desde agosto; o ether está perto de US$ 1.900. A queda veio com a inflação ao produtor dos EUA ainda alta (6,5% em 12 meses), que mantém as apostas de alta de juros em dezembro, somada a cerca de US$ 1,3 bilhão em posições alavancadas liquidadas e a novas saídas dos ETFs de bitcoin. O índice de medo e ganância caiu para 13, medo extremo, e no fim de semana o volume costuma ser menor, o que pode deixar os movimentos mais bruscos. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Hoje (12/11): pedidos de seguro-desemprego nos EUA.",
-  "Sexta (13/11): inflação ao produtor dos EUA (PPI) de outubro; outro número alto pode reforçar as apostas de alta de juros.",
-  "Sábado (14/11): fala do vice-presidente do Fed, Philip Jefferson. Próxima reunião do Fed: 8 e 9/12.",
-  "Desbloqueios de tokens: AZTEC em 13/11 (cerca de 32% da oferta em circulação), STRK e SIGN em 15/11; confirme as datas antes de operar essas moedas.",
-  "ETFs: veja se as saídas diárias continuam; a MSCI vai tirar Strategy e Metaplanet de seus índices após 30/11."
+  "Níveis citados por analistas: acima, US$ 68 mil e US$ 70 mil; abaixo, US$ 64.686 (fechamento de 19/08) e US$ 58.566 (mínima do ano, 01/07).",
+  "Domingo (15/11): desbloqueio de 127 milhões de STRK (Starknet); confirme a data antes de operar a moeda.",
+  "15 a 17/11: conferência Breakpoint da Solana, em Londres.",
+  "Quarta (18/11): ata da última reunião do Fed; o mercado precifica alta de juros em dezembro.",
+  "Segunda (16/11): ETFs voltam a negociar; veja se as saídas diárias de bitcoin continuam."
  ],
  "fontes": [
   {
-   "nome": "crypto.news – Bitcoin segura perto de US$ 73.700, mas analistas alertam para mais vendas",
-   "url": "https://crypto.news/bitcoin-price-stuck-73700-leverage-etf-outflows/"
+   "nome": "CryptoTicker – Bitcoin abaixo de US$ 67 mil, menor nível desde agosto",
+   "url": "https://cryptoticker.io/en/bitcoin-price-below-67000-lowest-since-august/"
   },
   {
-   "nome": "KuCoin – Relatório diário do mercado cripto (12/11/2026)",
-   "url": "https://www.kucoin.com/news/articles/crypto-daily-market-report-november-12-2026"
+   "nome": "CoinCodex – Atualização diária do mercado (14/11/2026)",
+   "url": "https://coincodex.com/article/95422/daily-market-update-for-november-14-2026"
   },
   {
-   "nome": "KuCoin News – ETFs de bitcoin e ether com saídas de US$ 445 milhões em 11/11",
-   "url": "https://www.kucoin.com/news/flash/bitcoin-and-ethereum-etfs-record-445m-in-outflows-on-november-11"
+   "nome": "The Coin Republic – Inflação ao produtor dos EUA sobe 6,5%",
+   "url": "https://www.thecoinrepublic.com/2026/11/13/us-ppi-inflation-rises-65-as-markets-weigh-size-of-december-fed-rate-hike/"
   },
   {
-   "nome": "Cointelegraph – Inflação alta nos EUA aumenta temor de alta de juros",
-   "url": "https://cointelegraph.com/news/hot-us-inflation-raises-rate-hike-crypto"
+   "nome": "KuCoin – Fluxo dos ETFs de BTC (dados preliminares)",
+   "url": "https://www.kucoin.com/news/insight/BTC/6af7300740903b0007ade320"
+  },
+  {
+   "nome": "CryptoTicker – Resumo da semana e datas importantes",
+   "url": "https://cryptoticker.io/en/crypto-news-this-week-recap-key-dates-november-2026/"
   }
  ]
 }
