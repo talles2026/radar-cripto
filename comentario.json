@@ -1,34 +1,30 @@
 {
- "data": "2026-11-14T10:43:59Z",
- "titulo": "BTC cai abaixo de US$ 67 mil e mercado vai ao medo extremo",
- "texto": "O bitcoin caiu cerca de 3% em 24 horas e perto de 12% na semana, passando abaixo de US$ 67 mil, o menor nível desde agosto; o ether está perto de US$ 1.900. A queda veio com a inflação ao produtor dos EUA ainda alta (6,5% em 12 meses), que mantém as apostas de alta de juros em dezembro, somada a cerca de US$ 1,3 bilhão em posições alavancadas liquidadas e a novas saídas dos ETFs de bitcoin. O índice de medo e ganância caiu para 13, medo extremo, e no fim de semana o volume costuma ser menor, o que pode deixar os movimentos mais bruscos. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-15T10:44:33Z",
+ "titulo": "BTC toca US$ 62 mil e medo extremo chega a 10",
+ "texto": "O bitcoin chegou a US$ 61.946 na madrugada deste domingo e voltou para perto de US$ 64.800, queda de cerca de 3,5% em 24 horas e de mais de 13% na semana; o ether está perto de US$ 1.800, com queda de 4% a 5%. A pressão vem das saídas dos ETFs de bitcoin (US$ 1,07 bilhão na semana, a segunda seguida acima de US$ 1 bilhão), da expectativa de alta de juros nos EUA em dezembro e de mais de US$ 2 bilhões em posições alavancadas liquidadas em 24 horas. O índice de medo e ganância caiu para 10, medo extremo, e o volume menor do fim de semana deixa os movimentos mais bruscos. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Níveis citados por analistas: acima, US$ 68 mil e US$ 70 mil; abaixo, US$ 64.686 (fechamento de 19/08) e US$ 58.566 (mínima do ano, 01/07).",
-  "Domingo (15/11): desbloqueio de 127 milhões de STRK (Starknet); confirme a data antes de operar a moeda.",
-  "15 a 17/11: conferência Breakpoint da Solana, em Londres.",
-  "Quarta (18/11): ata da última reunião do Fed; o mercado precifica alta de juros em dezembro.",
-  "Segunda (16/11): ETFs voltam a negociar; veja se as saídas diárias de bitcoin continuam."
+  "Níveis citados por analistas: abaixo, US$ 61.946 (mínima da madrugada), US$ 60 mil e US$ 57.718 (mínima do ano, 01/07); acima, US$ 65.564, US$ 67.442 e US$ 68.200.",
+  "Segunda (16/11): discurso do presidente do Fed, Kevin Warsh, e novos dados de fluxo dos ETFs após 7 dias seguidos de saídas.",
+  "Terça (17/11): vendas no varejo dos EUA de outubro e resultado da Nvidia à noite.",
+  "Quarta (18/11): ata da reunião do Fed de outubro; o mercado precifica alta de juros em dezembro (reunião em 8 e 9/12).",
+  "Sexta (20/11): vencimento de cerca de 28,3 mil BTC em opções na Deribit."
  ],
  "fontes": [
   {
-   "nome": "CryptoTicker – Bitcoin abaixo de US$ 67 mil, menor nível desde agosto",
-   "url": "https://cryptoticker.io/en/bitcoin-price-below-67000-lowest-since-august/"
+   "nome": "CryptoTicker – Bitcoin: mínima da madrugada e fechamento semanal (15/11)",
+   "url": "https://cryptoticker.io/en/bitcoin-price-overnight-low-weekly-close-november-15-2026/"
   },
   {
-   "nome": "CoinCodex – Atualização diária do mercado (14/11/2026)",
-   "url": "https://coincodex.com/article/95422/daily-market-update-for-november-14-2026"
+   "nome": "CoinCodex – Atualização diária do mercado (15/11/2026)",
+   "url": "https://coincodex.com/article/95430/daily-market-update-for-november-15-2026/"
   },
   {
-   "nome": "The Coin Republic – Inflação ao produtor dos EUA sobe 6,5%",
-   "url": "https://www.thecoinrepublic.com/2026/11/13/us-ppi-inflation-rises-65-as-markets-weigh-size-of-december-fed-rate-hike/"
+   "nome": "The Block – ETFs de bitcoin perdem US$ 1 bilhão pela segunda semana",
+   "url": "https://www.theblock.co/news/markets/2026-11-14-bitcoin-etfs-lose-1-billion-for-the-second-week-in-a-row-as-crypto-funds-except-one-continue-bleeding-440337"
   },
   {
-   "nome": "KuCoin – Fluxo dos ETFs de BTC (dados preliminares)",
-   "url": "https://www.kucoin.com/news/insight/BTC/6af7300740903b0007ade320"
-  },
-  {
-   "nome": "CryptoTicker – Resumo da semana e datas importantes",
-   "url": "https://cryptoticker.io/en/crypto-news-this-week-recap-key-dates-november-2026/"
+   "nome": "CryptoTicker – Semana do bitcoin: datas de 16 a 22/11",
+   "url": "https://cryptoticker.io/en/bitcoin-week-ahead-november-16-22-2026/"
   }
  ]
 }
