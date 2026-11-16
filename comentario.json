@@ -1,30 +1,30 @@
 {
- "data": "2026-11-15T10:44:33Z",
- "titulo": "BTC toca US$ 62 mil e medo extremo chega a 10",
- "texto": "O bitcoin chegou a US$ 61.946 na madrugada deste domingo e voltou para perto de US$ 64.800, queda de cerca de 3,5% em 24 horas e de mais de 13% na semana; o ether está perto de US$ 1.800, com queda de 4% a 5%. A pressão vem das saídas dos ETFs de bitcoin (US$ 1,07 bilhão na semana, a segunda seguida acima de US$ 1 bilhão), da expectativa de alta de juros nos EUA em dezembro e de mais de US$ 2 bilhões em posições alavancadas liquidadas em 24 horas. O índice de medo e ganância caiu para 10, medo extremo, e o volume menor do fim de semana deixa os movimentos mais bruscos. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-16T10:45:00Z",
+ "titulo": "BTC perto de US$ 65 mil à espera do Fed e da Nvidia",
+ "texto": "O bitcoin está perto de US$ 65 mil nesta segunda, praticamente estável em 24 horas depois de ter caído abaixo de US$ 62 mil no domingo, a mínima em três meses; na semana a queda é de cerca de 13%, e o ether segue perto de US$ 1.800 a US$ 1.825. Os ETFs à vista continuam perdendo dinheiro: na semana de 9 a 13/11 saíram US$ 1,07 bilhão dos de bitcoin (cinco dias seguidos de saídas) e US$ 399 milhões dos de ether. O índice de medo e ganância segue em 10, medo extremo, e o mercado vê quase 90% de chance de nova alta de juros nos EUA ainda este ano. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Níveis citados por analistas: abaixo, US$ 61.946 (mínima da madrugada), US$ 60 mil e US$ 57.718 (mínima do ano, 01/07); acima, US$ 65.564, US$ 67.442 e US$ 68.200.",
-  "Segunda (16/11): discurso do presidente do Fed, Kevin Warsh, e novos dados de fluxo dos ETFs após 7 dias seguidos de saídas.",
-  "Terça (17/11): vendas no varejo dos EUA de outubro e resultado da Nvidia à noite.",
-  "Quarta (18/11): ata da reunião do Fed de outubro; o mercado precifica alta de juros em dezembro (reunião em 8 e 9/12).",
-  "Sexta (20/11): vencimento de cerca de 28,3 mil BTC em opções na Deribit."
+  "Hoje (16/11), 14h de Brasília: discurso do presidente do Fed, Kevin Warsh, em San Francisco; também há desbloqueio de tokens de Cronos (CRO) e Arbitrum (ARB).",
+  "Terça (17/11): vendas no varejo dos EUA de outubro e resultado da Nvidia após o fechamento; na Rússia, entra em vigor a regra que libera compra de BTC, ETH e USDT por pequenos investidores.",
+  "Quarta (18/11): ata da última reunião do Fed, às 16h de Brasília, que pode reforçar ou não a aposta em alta de juros.",
+  "Quinta (19/11): pedidos de seguro-desemprego nos EUA; sexta (20/11): desbloqueio de 3,7% dos tokens em circulação da LayerZero (ZRO).",
+  "Fique de olho nos números diários dos ETFs: uma volta das entradas seria o primeiro sinal de alívio depois de semanas de saídas."
  ],
  "fontes": [
   {
-   "nome": "CryptoTicker – Bitcoin: mínima da madrugada e fechamento semanal (15/11)",
-   "url": "https://cryptoticker.io/en/bitcoin-price-overnight-low-weekly-close-november-15-2026/"
+   "nome": "CoinDesk – Ata do Fed, Nvidia e regras da Rússia: a semana do cripto (16/11)",
+   "url": "https://www.coindesk.com/markets/2026/11/16/fomc-minutes-nvidia-earnings-russia-s-retail-crypto-rules-crypto-week-ahead"
   },
   {
-   "nome": "CoinCodex – Atualização diária do mercado (15/11/2026)",
-   "url": "https://coincodex.com/article/95430/daily-market-update-for-november-15-2026/"
+   "nome": "CryptoPotato – Bitcoin abaixo de US$ 65 mil (16/11)",
+   "url": "https://cryptopotato.com/bitcoin-btc-struggles-below-65k-this-altcoin-explodes-120-in-a-day-market-watch"
   },
   {
-   "nome": "The Block – ETFs de bitcoin perdem US$ 1 bilhão pela segunda semana",
-   "url": "https://www.theblock.co/news/markets/2026-11-14-bitcoin-etfs-lose-1-billion-for-the-second-week-in-a-row-as-crypto-funds-except-one-continue-bleeding-440337"
+   "nome": "Goodman Macro – Fluxos dos ETFs de bitcoin e ether (16/11)",
+   "url": "https://www.goodman-macro.com/en/articles/20261116-crypto-flows/"
   },
   {
-   "nome": "CryptoTicker – Semana do bitcoin: datas de 16 a 22/11",
-   "url": "https://cryptoticker.io/en/bitcoin-week-ahead-november-16-22-2026/"
+   "nome": "CoinGabbar – BTC a US$ 65 mil, índice de medo em 10 (16/11)",
+   "url": "https://www.coingabbar.com/en/crypto-news-nov-16-bitcoin-eth-price-fear-index-crypto-events"
   }
  ]
 }
