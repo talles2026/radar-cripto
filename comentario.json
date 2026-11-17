@@ -1,30 +1,38 @@
 {
- "data": "2026-11-16T10:45:00Z",
- "titulo": "BTC perto de US$ 65 mil à espera do Fed e da Nvidia",
- "texto": "O bitcoin está perto de US$ 65 mil nesta segunda, praticamente estável em 24 horas depois de ter caído abaixo de US$ 62 mil no domingo, a mínima em três meses; na semana a queda é de cerca de 13%, e o ether segue perto de US$ 1.800 a US$ 1.825. Os ETFs à vista continuam perdendo dinheiro: na semana de 9 a 13/11 saíram US$ 1,07 bilhão dos de bitcoin (cinco dias seguidos de saídas) e US$ 399 milhões dos de ether. O índice de medo e ganância segue em 10, medo extremo, e o mercado vê quase 90% de chance de nova alta de juros nos EUA ainda este ano. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-17T10:48:27Z",
+ "titulo": "BTC parado perto de US$ 65 mil, de olho no Fed",
+ "texto": "O bitcoin está perto de US$ 64.900 nesta terça, praticamente estável em 24 horas, mas ainda cerca de 13% abaixo de uma semana atrás; o ether está perto de US$ 1.825, também com queda de quase 14% em sete dias. O mercado segue com medo extremo (índice de medo e ganância em 12) e os ETFs de bitcoin somaram sete dias seguidos de saídas até 13/11, cerca de US$ 1,9 bilhão, enquanto os de ether tiveram uma pequena entrada no último dado. O que pesa é a expectativa de alta de juros nos EUA em dezembro (cerca de 90% de chance de alta de 0,25 ponto), com os juros longos dos títulos americanos acima de 5%. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Hoje (16/11), 14h de Brasília: discurso do presidente do Fed, Kevin Warsh, em San Francisco; também há desbloqueio de tokens de Cronos (CRO) e Arbitrum (ARB).",
-  "Terça (17/11): vendas no varejo dos EUA de outubro e resultado da Nvidia após o fechamento; na Rússia, entra em vigor a regra que libera compra de BTC, ETH e USDT por pequenos investidores.",
-  "Quarta (18/11): ata da última reunião do Fed, às 16h de Brasília, que pode reforçar ou não a aposta em alta de juros.",
-  "Quinta (19/11): pedidos de seguro-desemprego nos EUA; sexta (20/11): desbloqueio de 3,7% dos tokens em circulação da LayerZero (ZRO).",
-  "Fique de olho nos números diários dos ETFs: uma volta das entradas seria o primeiro sinal de alívio depois de semanas de saídas."
+  "Hoje (17/11): vendas no varejo dos EUA de outubro às 10h30 de Brasília e fala do diretor do Fed Christopher Waller às 11h10; à noite sai o resultado da Nvidia, que costuma mexer com o apetite por risco.",
+  "Quarta (18/11), 16h de Brasília: ata da última reunião do Fed, que pode reforçar ou aliviar a aposta em alta de juros.",
+  "Quinta (19/11): pedidos de seguro-desemprego nos EUA; dia 25/11 saem o PIB do 3º trimestre e o índice de inflação PCE de outubro.",
+  "Níveis citados pelos analistas: a mínima de domingo, perto de US$ 62 mil, e a máxima de segunda, perto de US$ 66 mil; sair dessa faixa pode indicar a próxima direção.",
+  "Segurança: houve novos ataques (carteira Safe com perda de US$ 6,45 milhões) e vazamento de dados de pedidos de um parceiro da Trezor; desconfie de ligações e mensagens pedindo dados."
  ],
  "fontes": [
   {
-   "nome": "CoinDesk – Ata do Fed, Nvidia e regras da Rússia: a semana do cripto (16/11)",
-   "url": "https://www.coindesk.com/markets/2026/11/16/fomc-minutes-nvidia-earnings-russia-s-retail-crypto-rules-crypto-week-ahead"
+   "nome": "Pintu Academy – Análise do mercado cripto (17/11)",
+   "url": "https://pintu.co.id/en/academy/post/crypto-market-analysis-today-november-17-2026"
   },
   {
-   "nome": "CryptoPotato – Bitcoin abaixo de US$ 65 mil (16/11)",
-   "url": "https://cryptopotato.com/bitcoin-btc-struggles-below-65k-this-altcoin-explodes-120-in-a-day-market-watch"
+   "nome": "Goodman Macro – Fluxos dos ETFs, funding e open interest (17/11)",
+   "url": "https://www.goodman-macro.com/en/articles/20261117-crypto-flows/"
   },
   {
-   "nome": "Goodman Macro – Fluxos dos ETFs de bitcoin e ether (16/11)",
-   "url": "https://www.goodman-macro.com/en/articles/20261116-crypto-flows/"
+   "nome": "CoinGabbar – Preços, índice de medo, hacks e chances de alta de juros (17/11)",
+   "url": "https://www.coingabbar.com/en/crypto-news-nov-17-bitcoin-eth-defi-fear-index-fed-rate-hike"
   },
   {
-   "nome": "CoinGabbar – BTC a US$ 65 mil, índice de medo em 10 (16/11)",
-   "url": "https://www.coingabbar.com/en/crypto-news-nov-16-bitcoin-eth-price-fear-index-crypto-events"
+   "nome": "CryptoTicker – Bitcoin perto de US$ 65 mil e a aposta em juros (17/11)",
+   "url": "https://cryptoticker.io/en/bitcoin-price-waller-rate-hike-november-17-2026/"
+  },
+  {
+   "nome": "Federal Reserve – Agenda de novembro de 2026",
+   "url": "https://www.federalreserve.gov/newsevents/2026-November.htm"
+  },
+  {
+   "nome": "CMC Markets – A semana: ata do Fed e resultado da Nvidia",
+   "url": "https://www.cmcmarkets.com/en-gb/news-and-analysis/the-week-ahead-fed-minutes-japan-cpi-nvidia-earnings"
   }
  ]
 }
