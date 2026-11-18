@@ -1,38 +1,38 @@
 {
- "data": "2026-11-17T10:48:27Z",
- "titulo": "BTC parado perto de US$ 65 mil, de olho no Fed",
- "texto": "O bitcoin está perto de US$ 64.900 nesta terça, praticamente estável em 24 horas, mas ainda cerca de 13% abaixo de uma semana atrás; o ether está perto de US$ 1.825, também com queda de quase 14% em sete dias. O mercado segue com medo extremo (índice de medo e ganância em 12) e os ETFs de bitcoin somaram sete dias seguidos de saídas até 13/11, cerca de US$ 1,9 bilhão, enquanto os de ether tiveram uma pequena entrada no último dado. O que pesa é a expectativa de alta de juros nos EUA em dezembro (cerca de 90% de chance de alta de 0,25 ponto), com os juros longos dos títulos americanos acima de 5%. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
+ "data": "2026-11-18T10:43:56Z",
+ "titulo": "BTC perto de US$ 64 mil à espera da ata do Fed",
+ "texto": "O bitcoin está perto de US$ 64.300 nesta quarta, com queda de cerca de 1% em 24 horas, e o ether segue perto de US$ 1.800; o índice de medo e ganância marcou 11, o sexto dia seguido em medo extremo. Os ETFs à vista voltaram a ter saídas: cerca de US$ 240 milhões nos de bitcoin (a maior parte no IBIT, da BlackRock) e US$ 29 milhões nos de ether no último dado. O balanço forte da Nvidia e as vendas no varejo dos EUA acima do esperado não tiraram o foco do principal peso: a aposta de que o Fed volte a subir juros, reforçada por um dirigente que falou em várias altas até a primavera de 2027. A estatística histórica do app não pôde ser consultada nesta atualização; veja os números de situações parecidas direto no app, lembrando que são dados do passado e não garantia.",
  "pontos": [
-  "Hoje (17/11): vendas no varejo dos EUA de outubro às 10h30 de Brasília e fala do diretor do Fed Christopher Waller às 11h10; à noite sai o resultado da Nvidia, que costuma mexer com o apetite por risco.",
-  "Quarta (18/11), 16h de Brasília: ata da última reunião do Fed, que pode reforçar ou aliviar a aposta em alta de juros.",
-  "Quinta (19/11): pedidos de seguro-desemprego nos EUA; dia 25/11 saem o PIB do 3º trimestre e o índice de inflação PCE de outubro.",
-  "Níveis citados pelos analistas: a mínima de domingo, perto de US$ 62 mil, e a máxima de segunda, perto de US$ 66 mil; sair dessa faixa pode indicar a próxima direção.",
-  "Segurança: houve novos ataques (carteira Safe com perda de US$ 6,45 milhões) e vazamento de dados de pedidos de um parceiro da Trezor; desconfie de ligações e mensagens pedindo dados."
+  "Hoje (18/11), 16h de Brasília: ata da reunião do Fed de 27 e 28/10; o tom sobre novas altas de juros pode mexer com o bitcoin no fim da tarde.",
+  "Fluxo dos ETFs: as saídas continuam; uma virada para entradas seria um sinal de alívio, mais saídas mantêm a pressão.",
+  "Níveis citados pelo mercado: a mínima do fim de semana, perto de US$ 62 mil, e a região de US$ 66 mil; um analista da Schwab cita US$ 85 mil como o nível que confirmaria uma alta duradoura.",
+  "Desbloqueios de tokens: ZRO (LayerZero) em 20/11, cerca de US$ 34 milhões, e MON em 24/11, o maior do mês; desbloqueios grandes podem pressionar o preço dessas moedas.",
+  "Próximas datas: falas de dirigentes do Fed ao longo da semana, inflação do Japão em 20/11 e decisão de juros do Fed em 09/12."
  ],
  "fontes": [
   {
-   "nome": "Pintu Academy – Análise do mercado cripto (17/11)",
-   "url": "https://pintu.co.id/en/academy/post/crypto-market-analysis-today-november-17-2026"
+   "nome": "CryptoTicker – Bitcoin antes da ata do Fed, índice de medo em 11 (18/11)",
+   "url": "https://cryptoticker.io/en/bitcoin-price-fed-minutes-extreme-fear/"
   },
   {
-   "nome": "Goodman Macro – Fluxos dos ETFs, funding e open interest (17/11)",
-   "url": "https://www.goodman-macro.com/en/articles/20261117-crypto-flows/"
+   "nome": "KuCoin News (dados Farside) – Saídas dos ETFs de bitcoin e ether",
+   "url": "https://www.kucoin.com/news/flash/us-bitcoin-and-ethereum-spot-etfs-recorded-net-outflows-of-239-9m-and-29-1m-on-nov-17"
   },
   {
-   "nome": "CoinGabbar – Preços, índice de medo, hacks e chances de alta de juros (17/11)",
-   "url": "https://www.coingabbar.com/en/crypto-news-nov-17-bitcoin-eth-defi-fear-index-fed-rate-hike"
+   "nome": "CoinDesk – Bitcoin, varejo dos EUA, Nvidia e Fed (17/11)",
+   "url": "https://www.coindesk.com/business/2026/11/17/live-updates-bitcoin-holds-near-usd64-000-as-tech-slides-ahead-of-nvidia-earnings"
   },
   {
-   "nome": "CryptoTicker – Bitcoin perto de US$ 65 mil e a aposta em juros (17/11)",
-   "url": "https://cryptoticker.io/en/bitcoin-price-waller-rate-hike-november-17-2026/"
+   "nome": "Pickaxe – Análise do mercado cripto (18/11)",
+   "url": "https://www.pickaxe.io/resources/news/crypto-markets-hold-steady-on-nov-18-2026-with-sol-surge"
   },
   {
-   "nome": "Federal Reserve – Agenda de novembro de 2026",
-   "url": "https://www.federalreserve.gov/newsevents/2026-November.htm"
+   "nome": "Altcoin Buzz – Agenda da semana (varejo, ata do Fed, Nvidia)",
+   "url": "https://www.altcoinbuzz.io/us-retail-sales-fed-minutes-nvidia-earnings-crypto-week-november-2026"
   },
   {
-   "nome": "CMC Markets – A semana: ata do Fed e resultado da Nvidia",
-   "url": "https://www.cmcmarkets.com/en-gb/news-and-analysis/the-week-ahead-fed-minutes-japan-cpi-nvidia-earnings"
+   "nome": "Bittime – Desbloqueios de tokens em novembro de 2026",
+   "url": "https://www.bittime.com/en/blog/token-unlock-november-2026"
   }
  ]
 }
